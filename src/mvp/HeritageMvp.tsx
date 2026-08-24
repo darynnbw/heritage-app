@@ -130,7 +130,10 @@ export function HeritageMvp() {
         {screen === 'login' && <AuthScreen mode="login" onDone={afterAuth} onSwitch={() => setScreen('signup')} onBack={() => setScreen('welcome')} />}
         {screen === 'signup' && <AuthScreen mode="signup" onDone={afterAuth} onSwitch={() => setScreen('login')} onBack={() => setScreen('welcome')} />}
         {screen === 'onboarding-intro' && (
-          <OnboardingIntro onContinue={() => setScreen('onboarding-relative')} />
+          <OnboardingIntro
+            onContinue={() => setScreen('onboarding-relative')}
+            onSkip={goHome}
+          />
         )}
         {screen === 'onboarding-relative' && userId && (
           <OnboardingRelative
@@ -142,6 +145,7 @@ export function HeritageMvp() {
               refresh()
               setScreen('onboarding-story')
             }}
+            onSkip={goHome}
           />
         )}
         {screen === 'onboarding-story' && userId && relative && (
@@ -154,6 +158,7 @@ export function HeritageMvp() {
               setTab('people')
               setScreen('relative')
             }}
+            onSkip={goHome}
           />
         )}
         {screen === 'home' && userId && (
@@ -501,7 +506,13 @@ function AuthScreen({
   )
 }
 
-function OnboardingIntro({ onContinue }: { onContinue: () => void }) {
+function OnboardingIntro({
+  onContinue,
+  onSkip,
+}: {
+  onContinue: () => void
+  onSkip: () => void
+}) {
   return (
     <>
       <header className="mvp-top mvp-top-brand mvp-top-onboard">
@@ -530,6 +541,11 @@ function OnboardingIntro({ onContinue }: { onContinue: () => void }) {
         <button className="mvp-btn mvp-btn-primary mvp-btn-block" type="button" onClick={onContinue}>
           Continue
         </button>
+        <div className="mvp-skip">
+          <button className="mvp-switch" type="button" onClick={onSkip}>
+            Go to Home instead
+          </button>
+        </div>
       </main>
     </>
   )
@@ -540,11 +556,13 @@ function OnboardingRelative({
   existing,
   onBack,
   onContinue,
+  onSkip,
 }: {
   userId: string
   existing: Relative | null
   onBack: () => void
   onContinue: (relativeId: string) => void
+  onSkip: () => void
 }) {
   const [name, setName] = useState(existing?.name ?? '')
   const [relationship, setRelationship] = useState(existing?.relationship ?? '')
@@ -590,6 +608,11 @@ function OnboardingRelative({
           error={relationshipError}
         />
         <button className="mvp-btn mvp-btn-primary mvp-btn-block" onClick={continueOnboarding}>Continue</button>
+        <div className="mvp-skip">
+          <button className="mvp-switch" type="button" onClick={onSkip}>
+            Go to Home instead
+          </button>
+        </div>
       </main>
     </>
   )
@@ -600,11 +623,13 @@ function OnboardingStory({
   relative,
   onBack,
   onSaved,
+  onSkip,
 }: {
   userId: string
   relative: Relative
   onBack: () => void
   onSaved: () => void
+  onSkip: () => void
 }) {
   const [title, setTitle] = useState('')
   const [prompt, setPrompt] = useState('')
@@ -647,6 +672,11 @@ function OnboardingStory({
           {error && <p className="mvp-error">{error}</p>}
         </label>
         <button className="mvp-btn mvp-btn-primary mvp-btn-block" onClick={save}>Save story</button>
+        <div className="mvp-skip">
+          <button className="mvp-switch" type="button" onClick={onSkip}>
+            Skip this story
+          </button>
+        </div>
       </main>
     </>
   )
@@ -675,12 +705,12 @@ function HomeScreen({
         <BrandLogo />
       </header>
       <main className="mvp-body mvp-home">
-        <section className="mvp-prompt-card">
+        <section className="mvp-prompt">
           <p className="mvp-quote">“{prompt}”</p>
           <div className="mvp-prompt-actions">
-            <button className="mvp-btn mvp-btn-ghost" type="button" onClick={onSwap}>Swap</button>
-            <button className="mvp-btn mvp-btn-primary" type="button" onClick={onWrite}>Answer question</button>
-            <button className="mvp-btn mvp-btn-secondary mvp-btn-block" type="button" onClick={onFreeWrite}>Skip the question</button>
+            <button className="mvp-btn mvp-btn-primary" type="button" onClick={onWrite}>Write</button>
+            <button className="mvp-switch" type="button" onClick={onSwap}>Another question</button>
+            <button className="mvp-switch" type="button" onClick={onFreeWrite}>Write without a question</button>
           </div>
         </section>
         <section className="mvp-feed">
@@ -827,12 +857,8 @@ function RelativeScreen({
           })}
         </div>
         <div className="mvp-relative-remove">
-          <button
-            className="mvp-btn mvp-btn-secondary mvp-btn-danger-text"
-            type="button"
-            onClick={() => setConfirming(true)}
-          >
-            Remove person
+          <button className="mvp-switch" type="button" onClick={() => setConfirming(true)}>
+            Remove from Heritage
           </button>
         </div>
 
@@ -844,11 +870,11 @@ function RelativeScreen({
                 Their stories will be removed too. This can&apos;t be undone.
               </p>
               <div className="mvp-modal-actions">
-                <button className="mvp-btn mvp-btn-secondary" type="button" onClick={() => setConfirming(false)}>
-                  Cancel
+                <button className="mvp-btn mvp-btn-ghost" type="button" onClick={() => setConfirming(false)}>
+                  Keep them
                 </button>
                 <button
-                  className="mvp-btn mvp-btn-danger"
+                  className="mvp-btn mvp-btn-secondary"
                   type="button"
                   disabled={isDeleting}
                   onClick={() => {
@@ -859,7 +885,7 @@ function RelativeScreen({
                     }, 300)
                   }}
                 >
-                  {isDeleting ? 'Removing…' : 'Remove person'}
+                  {isDeleting ? 'Removing…' : 'Remove'}
                 </button>
               </div>
             </div>
