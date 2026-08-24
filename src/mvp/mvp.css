@@ -194,15 +194,16 @@ a:focus-visible {
   padding-top: var(--space-10);
 }
 
+.mvp-prompt-card,
+.mvp-entry,
 .mvp-person {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--paper);
 }
 
-.mvp-prompt {
-  padding-bottom: var(--space-6);
-  border-bottom: 1px solid var(--line);
+.mvp-prompt-card {
+  padding: var(--space-6) var(--space-5) var(--space-5);
 }
 
 .mvp-quote {
@@ -284,10 +285,7 @@ a:focus-visible {
   gap: var(--space-6);
 }
 
-.mvp-feed {
-  gap: 0;
-}
-
+.mvp-feed,
 .mvp-card-grid {
   gap: var(--space-3);
 }
@@ -312,22 +310,7 @@ a:focus-visible {
   margin-top: var(--space-1);
 }
 
-.mvp-entry {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: var(--space-5) 0;
-  margin: 0;
-  background: transparent;
-  border: 0;
-  border-bottom: 1px solid var(--line);
-  border-radius: 0;
-}
-
-.mvp-entry:last-child {
-  border-bottom: 0;
-}
-
+.mvp-entry,
 .mvp-person {
   display: block;
   width: 100%;
@@ -395,6 +378,7 @@ a:focus-visible {
   flex-direction: column;
   align-items: flex-start;
   text-align: left;
+  padding: var(--space-5);
 }
 
 .mvp-relative-story-card .mvp-entry-top {
@@ -925,8 +909,10 @@ a:focus-visible {
     gap: var(--space-8);
   }
 
-  .mvp-prompt {
-    padding-bottom: var(--space-8);
+  .mvp-prompt-card {
+    position: relative;
+    top: 0;
+    padding: var(--space-8) var(--space-6) var(--space-6);
   }
 
   .mvp-quote {
@@ -934,6 +920,7 @@ a:focus-visible {
     font-size: var(--text-3xl);
   }
 
+  .mvp-feed,
   .mvp-card-grid {
     gap: var(--space-4);
   }
@@ -943,6 +930,7 @@ a:focus-visible {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .mvp-entry,
   .mvp-person {
     padding: var(--space-6);
   }
@@ -1288,10 +1276,13 @@ a:focus-visible {
 }
 
 .mvp-prompt-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2) var(--space-4);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.mvp-prompt-actions .mvp-btn-block {
+  grid-column: 1 / -1;
 }
 
 .mvp-page-head-copy {

@@ -67,7 +67,7 @@ Lucide only. `currentColor`. Decorative icons: `aria-hidden`. No emoji-as-icon.
 | Login / Signup | None (form + Lucide in fields) |
 | Onboarding intro | Medium `illustration-reading.svg` |
 | Onboarding relative / story | None |
-| Home | None (prompt is the page lead, not a card; empty = `illustration-journal.svg`) |
+| Home | None (prompt card is the hero; empty = `illustration-journal.svg`) |
 | People | None (empty = `illustration-people.svg` + CTA) |
 | Relative | None (empty = `illustration-journal.svg` + CTA) |
 | Story read | Modest `illustration-reading.svg` above the title; story text stays the focus |

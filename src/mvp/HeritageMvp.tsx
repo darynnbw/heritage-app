@@ -705,12 +705,12 @@ function HomeScreen({
         <BrandLogo />
       </header>
       <main className="mvp-body mvp-home">
-        <section className="mvp-prompt">
+        <section className="mvp-prompt-card">
           <p className="mvp-quote">“{prompt}”</p>
           <div className="mvp-prompt-actions">
-            <button className="mvp-btn mvp-btn-primary" type="button" onClick={onWrite}>Write</button>
-            <button className="mvp-switch" type="button" onClick={onSwap}>Another question</button>
-            <button className="mvp-switch" type="button" onClick={onFreeWrite}>Write without a question</button>
+            <button className="mvp-btn mvp-btn-ghost" type="button" onClick={onSwap}>Swap</button>
+            <button className="mvp-btn mvp-btn-primary" type="button" onClick={onWrite}>Answer question</button>
+            <button className="mvp-btn mvp-btn-secondary mvp-btn-block" type="button" onClick={onFreeWrite}>Skip the question</button>
           </div>
         </section>
         <section className="mvp-feed">
