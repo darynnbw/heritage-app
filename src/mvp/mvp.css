@@ -149,11 +149,11 @@ a:focus-visible {
 
 .mvp-brand {
   margin: 0;
-  font-size: var(--text-sm);
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--quiet);
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--ink);
 }
 
 .mvp-back-btn {
@@ -380,6 +380,24 @@ a:focus-visible {
   align-items: flex-start;
   margin-bottom: var(--space-1);
   width: 100%;
+}
+
+.mvp-relative-remove {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: center;
+}
+
+.mvp-btn-danger-text {
+  color: var(--danger);
+  border-color: var(--line);
+}
+
+.mvp-btn-danger-text:hover {
+  background: var(--danger-soft);
+  border-color: var(--danger);
 }
 
 .mvp-entry-heading {
@@ -1249,17 +1267,6 @@ a:focus-visible {
 .mvp-brand-lockup {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-}
-
-.mvp-brand-mark {
-  display: flex;
-  color: var(--accent);
-}
-
-.mvp-brand-mark svg {
-  width: var(--icon-lg);
-  height: var(--icon-lg);
 }
 
 .mvp-back-btn svg {

@@ -1,6 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import {
-  BookMarked,
   ChevronLeft,
   Home,
   Lock,
@@ -186,6 +185,13 @@ export function HeritageMvp() {
             }}
             onOpenStory={(id) => openStory(id, 'relative')}
             onWrite={() => startWrite('', relative.id)}
+            onDelete={() => {
+              store.deleteRelative(relative.id)
+              refresh()
+              setRelativeId(null)
+              setTab('people')
+              setScreen('people')
+            }}
           />
         )}
         {screen === 'relative' && userId && !relative && (
@@ -771,13 +777,18 @@ function RelativeScreen({
   onBack,
   onOpenStory,
   onWrite,
+  onDelete,
 }: {
   relative: Relative
   stories: Story[]
   onBack: () => void
   onOpenStory: (id: string) => void
   onWrite: () => void
+  onDelete: () => void
 }) {
+  const [confirming, setConfirming] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+
   return (
     <>
       <header className="mvp-top">
@@ -815,6 +826,45 @@ function RelativeScreen({
             )
           })}
         </div>
+        <div className="mvp-relative-remove">
+          <button
+            className="mvp-btn mvp-btn-secondary mvp-btn-danger-text"
+            type="button"
+            onClick={() => setConfirming(true)}
+          >
+            Remove person
+          </button>
+        </div>
+
+        {confirming && (
+          <div className="mvp-modal-backdrop" onClick={() => setConfirming(false)}>
+            <div className="mvp-modal-card" onClick={(event) => event.stopPropagation()}>
+              <h2 className="mvp-modal-title">Remove {relative.name}?</h2>
+              <p className="mvp-modal-msg">
+                Their stories will be removed too. This can&apos;t be undone.
+              </p>
+              <div className="mvp-modal-actions">
+                <button className="mvp-btn mvp-btn-secondary" type="button" onClick={() => setConfirming(false)}>
+                  Cancel
+                </button>
+                <button
+                  className="mvp-btn mvp-btn-danger"
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={() => {
+                    setIsDeleting(true)
+                    setTimeout(() => {
+                      setConfirming(false)
+                      onDelete()
+                    }, 300)
+                  }}
+                >
+                  {isDeleting ? 'Removing…' : 'Remove person'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </>
   )
@@ -1336,9 +1386,6 @@ function BackControl({
 function BrandLogo() {
   return (
     <div className="mvp-brand-lockup">
-      <span className="mvp-brand-mark" aria-hidden="true">
-        <BookMarked />
-      </span>
       <p className="mvp-brand">Heritage</p>
     </div>
   )

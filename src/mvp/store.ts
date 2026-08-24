@@ -156,4 +156,11 @@ export const store = {
     db.stories = db.stories.filter((item) => item.id !== storyId)
     save(db)
   },
+
+  deleteRelative(relativeId: string) {
+    const db = load()
+    db.relatives = db.relatives.filter((item) => item.id !== relativeId)
+    db.stories = db.stories.filter((item) => item.relativeId !== relativeId)
+    save(db)
+  },
 }
