@@ -89,7 +89,7 @@ export const EditStoryModal: React.FC<EditStoryModalProps> = ({
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-labelledby="edit-story-title">
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 className="modal-title" id="edit-story-title" style={{ fontFamily: 'var(--font-serif-brand)' }}>
+          <h2 className="modal-title" id="edit-story-title" style={{ fontFamily: 'var(--font-heading)' }}>
             {lang === 'uk' ? 'Редагувати спогад' : 'Edit Story'}
           </h2>
           <button className="modal-close-btn" onClick={onClose} aria-label={t.cancel}>
@@ -186,7 +186,7 @@ export const EditStoryModal: React.FC<EditStoryModalProps> = ({
                   />
                 </label>
                 {(imageName || image) && (
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-slate-muted)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--color-muted-foreground)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
                     <Check size={14} style={{ color: '#27ae60' }} />
                     {imageName || 'Attached image'}
                   </span>
@@ -212,7 +212,7 @@ export const EditStoryModal: React.FC<EditStoryModalProps> = ({
             <button type="button" className="btn btn-secondary" onClick={onClose} style={{ borderRadius: '4px' }}>
               {t.cancel}
             </button>
-            <button type="submit" className="btn wax-seal-btn" style={{ borderRadius: '4px' }}>
+            <button type="submit" className="btn btn-primary" style={{ borderRadius: '4px' }}>
               {lang === 'uk' ? 'Зберегти зміни' : 'Save Changes'}
             </button>
           </div>

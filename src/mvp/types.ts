@@ -27,6 +27,7 @@ export type HeritageDB = {
 }
 
 export type Screen =
+  | 'welcome'
   | 'login'
   | 'signup'
   | 'onboarding-intro'

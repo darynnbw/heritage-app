@@ -47,8 +47,8 @@ export const BookPreviewModal: React.FC<BookPreviewModalProps> = ({
     <div className="modal-overlay" style={{ zIndex: 110 }}>
       <div className="modal-container" style={{ maxWidth: '750px', width: '95%' }} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'var(--font-serif-brand)' }}>
-            <BookOpen size={20} style={{ color: 'var(--amber-gold)' }} />
+          <h2 className="modal-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontFamily: 'var(--font-heading)' }}>
+            <BookOpen size={20} style={{ color: 'var(--color-accent)' }} />
             <span>{lang === 'uk' ? 'Перегляд книги' : 'Scrapbook Preview'}</span>
           </h2>
           <button className="modal-close-btn" onClick={onClose} aria-label={t.cancel}>
@@ -56,12 +56,12 @@ export const BookPreviewModal: React.FC<BookPreviewModalProps> = ({
           </button>
         </div>
 
-        <div className="modal-body" style={{ padding: '1.5rem', background: 'var(--bg-parchment-light)' }}>
+        <div className="modal-body" style={{ padding: '1.5rem', background: 'var(--color-background)' }}>
           {currentPage === 0 ? (
             <div className="book-preview-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div className="scrapbook-cover">
-                <h3 className="scrapbook-cover-title" style={{ fontFamily: 'var(--font-serif-brand)' }}>{bookTitle}</h3>
-                <div style={{ height: '2px', width: '80px', background: 'var(--amber-gold)', margin: '1rem 0' }}></div>
+                <h3 className="scrapbook-cover-title" style={{ fontFamily: 'var(--font-heading)' }}>{bookTitle}</h3>
+                <div style={{ height: '2px', width: '80px', background: 'var(--color-accent)', margin: '1rem 0' }}></div>
                 <h4 className="scrapbook-cover-subtitle">{lang === 'uk' ? 'Архів спогадів від' : 'A Living Archive by'} {authorName}</h4>
               </div>
 
@@ -108,51 +108,51 @@ export const BookPreviewModal: React.FC<BookPreviewModalProps> = ({
                     <img
                       src={person.photo}
                       alt={localizedPName}
-                      style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--amber-border)' }}
+                      style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--color-border)' }}
                     />
                     <div>
-                      <h3 style={{ fontSize: '1.7rem', color: 'var(--text-slate)', fontWeight: 700, fontFamily: 'var(--font-serif-brand)' }}>
+                      <h3 style={{ fontSize: '1.7rem', color: 'var(--color-foreground)', fontWeight: 700, fontFamily: 'var(--font-heading)' }}>
                         {localizedPName}
                       </h3>
-                      <div style={{ fontStyle: 'italic', color: 'var(--amber-gold)', fontSize: '0.95rem', marginTop: '0.2rem' }}>
+                      <div style={{ fontStyle: 'italic', color: 'var(--color-accent)', fontSize: '0.95rem', marginTop: '0.2rem' }}>
                         {getLocalizedValue(person.relationship)}
                       </div>
                     </div>
                   </div>
 
                   {person.bio && (
-                    <blockquote style={{ borderLeft: '3px solid var(--amber-border)', paddingLeft: '1rem', fontStyle: 'italic', color: 'var(--text-slate-muted)', margin: '1rem 0 1.5rem', fontSize: '0.95rem' }}>
+                    <blockquote style={{ borderLeft: '3px solid var(--color-border)', paddingLeft: '1rem', fontStyle: 'italic', color: 'var(--color-muted-foreground)', margin: '1rem 0 1.5rem', fontSize: '0.95rem' }}>
                       "{getLocalizedValue(person.bio)}"
                     </blockquote>
                   )}
 
-                  <hr style={{ border: 'none', borderTop: '1px dashed var(--border-muted)', margin: '1.5rem 0' }} />
+                  <hr style={{ border: 'none', borderTop: '1px dashed var(--color-border)', margin: '1.5rem 0' }} />
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                     {personStories.length === 0 ? (
-                      <p style={{ fontStyle: 'italic', color: 'var(--text-slate-light)', fontSize: '0.9rem' }}>
+                      <p style={{ fontStyle: 'italic', color: 'var(--color-muted-foreground)', fontSize: '0.9rem' }}>
                         {t.noStoriesPrint}
                       </p>
                     ) : (
                       personStories.map((story) => (
                         <article key={story.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                          <h4 style={{ fontSize: '1.25rem', color: 'var(--text-slate)', fontWeight: 600 }}>
+                          <h4 style={{ fontSize: '1.25rem', color: 'var(--color-foreground)', fontWeight: 600 }}>
                             {getLocalizedValue(story.title)}
                           </h4>
-                          <span style={{ fontSize: '0.75rem', color: 'var(--amber-gold)', fontWeight: 700 }}>
+                          <span style={{ fontSize: '0.75rem', color: 'var(--color-accent)', fontWeight: 700 }}>
                             {getLocalizedValue(story.date)}
                           </span>
-                          <p style={{ fontSize: '0.92rem', color: 'var(--text-slate-muted)', lineHeight: '1.6', whiteSpace: 'pre-line' }}>
+                          <p style={{ fontSize: '0.92rem', color: 'var(--color-muted-foreground)', lineHeight: '1.6', whiteSpace: 'pre-line' }}>
                             {getLocalizedValue(story.content)}
                           </p>
                           {story.image && (
                             <img
                               src={story.image}
                               alt={getLocalizedValue(story.title)}
-                              style={{ width: '100%', maxHeight: '180px', objectFit: 'cover', borderRadius: '4px', marginTop: '0.25rem', border: '1px solid var(--border-muted)' }}
+                              style={{ width: '100%', maxHeight: '180px', objectFit: 'cover', borderRadius: '4px', marginTop: '0.25rem', border: '1px solid var(--color-border)' }}
                             />
                           )}
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-slate-light)', borderTop: '1px dashed var(--amber-border)', paddingTop: '0.4rem', marginTop: '0.25rem' }}>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--color-muted-foreground)', borderTop: '1px dashed var(--color-border)', paddingTop: '0.4rem', marginTop: '0.25rem' }}>
                             {t.storySharedBy} {getLocalizedValue(story.contributor)}
                           </div>
                         </article>
@@ -175,7 +175,7 @@ export const BookPreviewModal: React.FC<BookPreviewModalProps> = ({
               <ChevronLeft size={24} />
             </button>
 
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-slate-muted)', fontWeight: 600, flex: 1, textAlign: 'center' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--color-muted-foreground)', fontWeight: 600, flex: 1, textAlign: 'center' }}>
               {currentPage === 0
                 ? (lang === 'uk' ? 'Обкладинка книги' : 'Book Cover')
                 : `${lang === 'uk' ? 'Особа' : 'Person'} ${currentPage} / ${people.length}`}
@@ -193,11 +193,11 @@ export const BookPreviewModal: React.FC<BookPreviewModalProps> = ({
           </div>
         </div>
 
-        <div className="modal-footer" style={{ background: 'var(--bg-card)' }}>
+        <div className="modal-footer" style={{ background: 'var(--color-card)' }}>
           <button className="btn btn-secondary" onClick={onClose} style={{ borderRadius: '4px' }}>
             {lang === 'uk' ? 'Закрити' : 'Close'}
           </button>
-          <button className="btn wax-seal-btn" onClick={onPrint} style={{ borderRadius: '4px' }}>
+          <button className="btn btn-primary" onClick={onPrint} style={{ borderRadius: '4px' }}>
             <Printer size={16} />
             <span>{lang === 'uk' ? 'Друк книги (PDF)' : 'Print Book (PDF)'}</span>
           </button>
