@@ -34,7 +34,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({
   return (
     <header className="menu-bar" id="app-menu-bar">
       <div className="brand-section">
-        <div className="brand-logo" style={{ animation: 'pulse-gold 3s infinite' }}>
+        <div className="brand-logo">
           <svg
             width="32"
             height="32"
@@ -71,15 +71,15 @@ export const MenuBar: React.FC<MenuBarProps> = ({
 
       <div className="actions-container">
         {/* Language selector toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: 'var(--bg-parchment)', border: '1px solid var(--amber-border)', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>
-          <Globe size={14} style={{ color: 'var(--text-slate-light)' }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: 'var(--color-background)', border: '1px solid var(--color-border)', padding: '0.25rem 0.5rem', borderRadius: '6px' }}>
+          <Globe size={14} style={{ color: 'var(--color-muted-foreground)' }} />
           <button
             onClick={() => setLang('en')}
             style={{
-              background: lang === 'en' ? 'var(--amber-gold)' : 'transparent',
-              color: lang === 'en' ? '#fff' : 'var(--text-slate-muted)',
+              background: lang === 'en' ? 'var(--color-accent)' : 'transparent',
+              color: lang === 'en' ? 'var(--color-on-accent)' : 'var(--color-muted-foreground)',
               border: 'none',
-              borderRadius: '2px',
+              borderRadius: '4px',
               padding: '0.2rem 0.5rem',
               fontSize: '0.75rem',
               fontWeight: 700,
@@ -92,10 +92,10 @@ export const MenuBar: React.FC<MenuBarProps> = ({
           <button
             onClick={() => setLang('uk')}
             style={{
-              background: lang === 'uk' ? 'var(--amber-gold)' : 'transparent',
-              color: lang === 'uk' ? '#fff' : 'var(--text-slate-muted)',
+              background: lang === 'uk' ? 'var(--color-accent)' : 'transparent',
+              color: lang === 'uk' ? 'var(--color-on-accent)' : 'var(--color-muted-foreground)',
               border: 'none',
-              borderRadius: '2px',
+              borderRadius: '4px',
               padding: '0.2rem 0.5rem',
               fontSize: '0.75rem',
               fontWeight: 700,
@@ -112,23 +112,23 @@ export const MenuBar: React.FC<MenuBarProps> = ({
           onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
           className="control-btn"
           title={t.toggleTheme}
-          style={{ width: '2.5rem', height: '2.5rem', border: '1px solid var(--amber-border)', background: 'var(--bg-parchment)', borderRadius: '4px' }}
+          style={{ width: '2.5rem', height: '2.5rem', border: '1px solid var(--color-border)', background: 'var(--color-background)', borderRadius: '6px' }}
         >
           {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
         </button>
 
         {/* Mobile View Toggle Switch (Map vs. List) */}
-        <div className="mobile-view-toggle" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: 'var(--bg-parchment)', border: '1px solid var(--amber-border)', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>
+        <div className="mobile-view-toggle" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: 'var(--color-background)', border: '1px solid var(--color-border)', padding: '0.25rem 0.5rem', borderRadius: '6px' }}>
           <button
             onClick={() => setViewMode('map')}
             style={{
-              background: viewMode === 'map' ? 'var(--amber-gold)' : 'transparent',
-              color: viewMode === 'map' ? '#fff' : 'var(--text-slate-muted)',
+              background: viewMode === 'map' ? 'var(--color-accent)' : 'transparent',
+              color: viewMode === 'map' ? 'var(--color-on-accent)' : 'var(--color-muted-foreground)',
               border: 'none',
-              borderRadius: '2px',
+              borderRadius: '4px',
               padding: '0.2rem 0.5rem',
               fontSize: '0.75rem',
-              fontWeight: 700,
+              fontWeight: 600,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -142,13 +142,13 @@ export const MenuBar: React.FC<MenuBarProps> = ({
           <button
             onClick={() => setViewMode('list')}
             style={{
-              background: viewMode === 'list' ? 'var(--amber-gold)' : 'transparent',
-              color: viewMode === 'list' ? '#fff' : 'var(--text-slate-muted)',
+              background: viewMode === 'list' ? 'var(--color-accent)' : 'transparent',
+              color: viewMode === 'list' ? 'var(--color-on-accent)' : 'var(--color-muted-foreground)',
               border: 'none',
-              borderRadius: '2px',
+              borderRadius: '4px',
               padding: '0.2rem 0.5rem',
               fontSize: '0.75rem',
-              fontWeight: 700,
+              fontWeight: 600,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -161,7 +161,7 @@ export const MenuBar: React.FC<MenuBarProps> = ({
           </button>
         </div>
 
-        <div className="collab-badge" title="Collaboration active: sharing invite-only stories" style={{ borderStyle: 'solid', borderRadius: '4px' }}>
+        <div className="collab-badge" title="Collaboration active: sharing invite-only stories">
           <div className="collab-dot"></div>
           <Users size={14} />
           <span>{t.inviteOnly}</span>

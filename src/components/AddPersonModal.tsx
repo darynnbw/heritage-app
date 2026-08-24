@@ -70,7 +70,7 @@ export const AddPersonModal: React.FC<AddPersonModalProps> = ({
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-labelledby="add-person-title">
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 className="modal-title" id="add-person-title" style={{ fontFamily: 'var(--font-serif-brand)' }}>{t.addPersonTitle}</h2>
+          <h2 className="modal-title" id="add-person-title" style={{ fontFamily: 'var(--font-heading)' }}>{t.addPersonTitle}</h2>
           <button className="modal-close-btn" onClick={onClose} aria-label={t.cancel}>
             <X size={20} />
           </button>
@@ -135,8 +135,8 @@ export const AddPersonModal: React.FC<AddPersonModalProps> = ({
                       style={{
                         position: 'relative',
                         padding: '0.25rem',
-                        background: isSelected ? 'var(--amber-light)' : 'transparent',
-                        border: isSelected ? '2px solid var(--amber-gold)' : '1px solid var(--border-muted)',
+                        background: isSelected ? 'var(--color-accent-light)' : 'transparent',
+                        border: isSelected ? '2px solid var(--color-accent)' : '1px solid var(--color-border)',
                         borderRadius: '4px',
                         cursor: 'pointer',
                         display: 'flex',
@@ -150,11 +150,11 @@ export const AddPersonModal: React.FC<AddPersonModalProps> = ({
                         alt={preset.name}
                         style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }}
                       />
-                      <span style={{ fontSize: '0.65rem', color: 'var(--text-slate-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>
+                      <span style={{ fontSize: '0.65rem', color: 'var(--color-muted-foreground)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%' }}>
                         {preset.name}
                       </span>
                       {isSelected && (
-                        <div style={{ position: 'absolute', top: -4, right: -4, background: 'var(--amber-gold)', color: '#fff', borderRadius: '50%', width: '14px', height: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ position: 'absolute', top: -4, right: -4, background: 'var(--color-accent)', color: '#fff', borderRadius: '50%', width: '14px', height: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <Check size={8} />
                         </div>
                       )}
@@ -176,7 +176,7 @@ export const AddPersonModal: React.FC<AddPersonModalProps> = ({
                   />
                 </label>
                 {customPhotoName && (
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-slate-muted)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--color-muted-foreground)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
                     <Check size={12} style={{ color: '#27ae60' }} />
                     {customPhotoName}
                   </span>
@@ -189,7 +189,7 @@ export const AddPersonModal: React.FC<AddPersonModalProps> = ({
             <button type="button" className="btn btn-secondary" onClick={onClose} style={{ borderRadius: '4px' }}>
               {t.cancel}
             </button>
-            <button type="submit" className="btn wax-seal-btn" style={{ borderRadius: '4px' }}>
+            <button type="submit" className="btn btn-primary" style={{ borderRadius: '4px' }}>
               {t.addPerson}
             </button>
           </div>

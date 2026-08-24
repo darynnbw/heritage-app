@@ -243,11 +243,8 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({
 
   return (
     <div className={`profile-panel-container ${isOpen ? 'open' : ''}`} id="person-profile-panel" role="dialog" aria-label={`${localizedName} profile`}>
-      {/* Visual Spiral Binders */}
-      <div style={{ position: 'absolute', top: 0, bottom: 0, left: '-2px', width: '4px', background: 'var(--amber-border)', zIndex: 12 }} />
-
       {/* Panel Header */}
-      <div className="panel-header" style={{ paddingLeft: '2.5rem' }}>
+      <div className="panel-header">
         <button className="panel-close-btn" onClick={onClose} aria-label={t.cancel}>
           <X size={20} />
         </button>
@@ -255,10 +252,10 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({
         <img src={person.photo} alt={localizedName} className="panel-portrait" />
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <h2 className="panel-name" style={{ fontFamily: 'var(--font-serif-brand)' }}>{localizedName}</h2>
+          <h2 className="panel-name" style={{ fontFamily: 'var(--font-heading)' }}>{localizedName}</h2>
           <button
             className="control-btn"
-            style={{ width: '2.2rem', height: '2.2rem', color: 'var(--text-slate-light)' }}
+            style={{ width: '2.2rem', height: '2.2rem', color: 'var(--color-muted-foreground)' }}
             onClick={onEditPersonClick}
             title={lang === 'uk' ? 'Редагувати профіль' : 'Edit profile'}
           >
@@ -270,13 +267,13 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({
         {person.bio && <p className="panel-bio">"{getLocalizedValue(person.bio)}"</p>}
       </div>
 
-      {/* Lined Notebook Page Scrollbox */}
-      <div className="panel-content" style={{ paddingLeft: '3rem' }}>
+      {/* Panel Content */}
+      <div className="panel-content">
         {/* Connections List */}
         <div className="media-attachments">
           <h3 className="section-label">{t.connections}</h3>
           {personRelationships.length === 0 ? (
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-slate-muted)', fontStyle: 'italic', fontFamily: 'var(--font-serif-story)' }}>
+            <p style={{ fontSize: '0.85rem', color: 'var(--color-muted-foreground)', fontStyle: 'italic' }}>
               {t.noConnections}
             </p>
           ) : (
@@ -288,7 +285,7 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({
                   <span
                     key={r.id}
                     className="node-relationship"
-                    style={{ background: 'var(--amber-light)', borderColor: 'var(--amber-border)', borderRadius: '4px' }}
+                    style={{ background: 'var(--color-accent-light)', borderColor: 'var(--color-border)', borderRadius: '4px', padding: '0.2rem 0.5rem', border: '1px solid var(--color-border)' }}
                     title={getLocalizedValue(r.label)}
                   >
                     <strong>{getLocalizedValue(partner.name)}</strong> ({getLocalizedValue(r.label)})
@@ -309,7 +306,7 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({
               <span>{t.connectToSomeone}</span>
             </button>
           ) : (
-            <form onSubmit={handleConnectSubmit} className="relationship-edit-popover" style={{ position: 'relative', width: '100%', boxShadow: 'none', border: '1px dashed var(--amber-border)', background: 'var(--bg-card)', padding: '0.75rem', borderRadius: '4px' }}>
+            <form onSubmit={handleConnectSubmit} style={{ position: 'relative', width: '100%', boxShadow: 'none', border: '1px solid var(--color-border)', background: 'var(--color-background)', padding: '0.75rem', borderRadius: '8px' }}>
               <div className="form-group">
                 <label className="form-label" style={{ fontSize: '0.7rem' }} htmlFor="connect-person-select">{t.connectTo}</label>
                 <select
@@ -373,11 +370,11 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({
               style={{ width: 'fit-content', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
               onClick={startRecording}
             >
-              <Mic size={14} style={{ color: 'var(--wax-red)' }} />
+              <Mic size={14} style={{ color: 'var(--color-destructive)' }} />
               <span>{lang === 'uk' ? 'Записати голос' : 'Record Voice Memory'}</span>
             </button>
           ) : isRecording ? (
-            <div className="voice-recorder-section" style={{ borderRadius: '4px' }}>
+            <div className="voice-recorder-section">
               <div className="voice-recorder-controls">
                 <button className="record-btn-pulsing" onClick={stopRecording} title="Stop recording">
                   <Square size={14} />
@@ -386,7 +383,7 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({
                   <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--danger-color)' }}>
                     {lang === 'uk' ? 'Запис...' : 'Recording...'}
                   </span>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-slate-muted)' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--color-muted-foreground)' }}>
                     {formatTimer(recordDuration)}
                   </span>
                 </div>
@@ -403,7 +400,7 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({
               </button>
             </div>
           ) : showClipTitleForm ? (
-            <form onSubmit={handleSaveRecording} className="voice-recorder-section" style={{ borderStyle: 'solid', borderRadius: '4px' }}>
+            <form onSubmit={handleSaveRecording} className="voice-recorder-section">
               <div className="form-group">
                 <label className="form-label" style={{ fontSize: '0.7rem' }} htmlFor="recording-title-input">
                   {lang === 'uk' ? 'Назва запису' : 'Recording Title'}
@@ -437,19 +434,19 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({
                 const isPlaying = playingAudioId === clip.id;
                 const progress = audioProgress[clip.id] || 0;
                 return (
-                  <div key={clip.id} className="audio-player-card" style={{ borderRadius: '4px' }}>
+                  <div key={clip.id} className="audio-player-card">
                     <button className="audio-play-btn" onClick={() => handlePlayAudio(clip)} aria-label={isPlaying ? 'Pause voice clip' : 'Play voice clip'}>
                       {isPlaying ? <Pause size={16} /> : <Play size={16} />}
                     </button>
                     <div className="audio-info">
-                      <div className="audio-title" style={{ fontFamily: 'var(--font-serif-story)' }}>{getLocalizedValue(clip.title)}</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
+                      <div className="audio-title" style={{ fontFamily: 'var(--font-body)' }}>{getLocalizedValue(clip.title)}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
                         {isPlaying ? (
-                          <div style={{ flex: 1, height: '4px', background: 'var(--border-muted)', borderRadius: '2px', overflow: 'hidden' }}>
-                            <div style={{ width: `${progress}%`, height: '100%', background: 'var(--amber-gold)' }}></div>
+                          <div style={{ flex: 1, height: '3px', background: 'var(--color-border)', borderRadius: '2px', overflow: 'hidden' }}>
+                            <div style={{ width: `${progress}%`, height: '100%', background: 'var(--color-accent)' }}></div>
                           </div>
                         ) : (
-                          <Volume2 size={12} style={{ color: 'var(--text-slate-light)' }} />
+                          <Volume2 size={12} style={{ color: 'var(--color-muted-foreground)' }} />
                         )}
                         <span className="audio-duration">{isPlaying ? `${Math.round(progress / 10)}s / ${clip.duration}` : clip.duration}</span>
                       </div>
@@ -465,21 +462,21 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({
         <div className="stories-section">
           <h3 className="section-label">{t.storiesAndMemories}</h3>
           {stories.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '2rem 1rem', background: 'var(--bg-card)', border: '1px dashed var(--amber-border)', borderRadius: '4px' }}>
-              <BookOpen size={24} style={{ color: 'var(--text-slate-light)', marginBottom: '0.5rem' }} />
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-slate-muted)', fontFamily: 'var(--font-serif-story)' }}>
+            <div style={{ textAlign: 'center', padding: '2rem 1rem', background: 'var(--color-background)', border: '1px solid var(--color-border)', borderRadius: '8px' }}>
+              <BookOpen size={24} style={{ color: 'var(--color-muted-foreground)', marginBottom: '0.5rem' }} />
+              <p style={{ fontSize: '0.85rem', color: 'var(--color-muted-foreground)' }}>
                 {t.noStories}
               </p>
             </div>
           ) : (
             stories.map((story) => (
-              <article key={story.id} className="story-card" style={{ borderRadius: '4px' }}>
+              <article key={story.id} className="story-card">
                 <div className="story-header">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <h4 className="story-title" style={{ fontFamily: 'var(--font-serif-story)' }}>{getLocalizedValue(story.title)}</h4>
+                    <h4 className="story-title">{getLocalizedValue(story.title)}</h4>
                     <button
                       className="control-btn"
-                      style={{ width: '1.8rem', height: '1.8rem', color: 'var(--text-slate-light)' }}
+                      style={{ width: '1.8rem', height: '1.8rem', color: 'var(--color-muted-foreground)' }}
                       onClick={() => onEditStoryClick(story)}
                       title={lang === 'uk' ? 'Редагувати спогад' : 'Edit story'}
                     >
@@ -488,10 +485,10 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({
                   </div>
                   <span className="story-date">{getLocalizedValue(story.date)}</span>
                 </div>
-                <p className="story-body" style={{ fontFamily: 'var(--font-serif-story)' }}>{getLocalizedValue(story.content)}</p>
+                <p className="story-body">{getLocalizedValue(story.content)}</p>
                 
                 {story.image && (
-                  <img src={story.image} alt={getLocalizedValue(story.title)} className="story-media-preview" style={{ borderRadius: '2px' }} />
+                  <img src={story.image} alt={getLocalizedValue(story.title)} className="story-media-preview" />
                 )}
 
                 <div className="story-footer">
@@ -501,7 +498,7 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({
                   </div>
                   <button
                     className="control-btn"
-                    style={{ color: 'var(--text-slate-light)', width: '2rem', height: '2rem' }}
+                    style={{ color: 'var(--color-muted-foreground)', width: '2rem', height: '2rem' }}
                     onClick={() => onDeleteStory(story.id)}
                     title={lang === 'uk' ? 'Видалити спогад' : 'Delete story'}
                     aria-label={lang === 'uk' ? 'Видалити спогад' : 'Delete story'}
@@ -516,7 +513,7 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({
       </div>
 
       {/* Panel Footer */}
-      <div className="panel-footer" style={{ paddingLeft: '2.5rem' }}>
+      <div className="panel-footer">
         <button
           className="btn btn-danger-outline"
           onClick={() => onDeletePerson(person.id)}
@@ -528,7 +525,7 @@ export const ProfilePanel: React.FC<ProfilePanelProps> = ({
           <span>{t.removeNode}</span>
         </button>
 
-        <button className="btn btn-primary wax-seal-btn" onClick={onAddStoryClick} id="add-story-btn" style={{ borderRadius: '4px' }}>
+        <button className="btn btn-primary" onClick={onAddStoryClick} id="add-story-btn">
           <Plus size={16} />
           <span>{t.addStory}</span>
         </button>

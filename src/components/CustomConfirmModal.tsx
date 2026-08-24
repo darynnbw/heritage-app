@@ -29,12 +29,12 @@ export const CustomConfirmModal: React.FC<CustomConfirmModalProps> = ({
           <div style={{ color: 'var(--danger-color)', display: 'flex', alignItems: 'center' }}>
             <AlertTriangle size={22} />
           </div>
-          <h2 id="confirm-title" style={{ fontFamily: 'var(--font-serif-brand)', fontSize: '1.2rem', color: 'var(--text-slate)', fontWeight: 700, letterSpacing: '0.03em' }}>
+          <h2 id="confirm-title" style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', color: 'var(--color-foreground)', fontWeight: 700, letterSpacing: '0.03em' }}>
             {title}
           </h2>
         </div>
         
-        <p style={{ fontSize: '0.88rem', color: 'var(--text-slate-muted)', lineHeight: '1.5', fontFamily: 'var(--font-serif-story)' }}>
+        <p style={{ fontSize: '0.88rem', color: 'var(--color-muted-foreground)', lineHeight: '1.5', fontFamily: 'var(--font-body)' }}>
           {message}
         </p>
 
@@ -43,7 +43,7 @@ export const CustomConfirmModal: React.FC<CustomConfirmModalProps> = ({
             {cancelLabel}
           </button>
           <button
-            className="btn wax-seal-btn"
+            className="btn btn-primary"
             onClick={onConfirm}
             style={{ padding: '0.45rem 1rem', fontSize: '0.8rem', borderRadius: '4px' }}
           >

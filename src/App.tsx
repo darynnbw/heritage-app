@@ -778,17 +778,17 @@ function App() {
               {t.welcomeText}
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', textAlign: 'left', background: 'var(--amber-light)', padding: '1rem 1.5rem', borderRadius: '10px', border: '1px solid var(--amber-border)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', textAlign: 'left', background: 'var(--color-accent-light)', padding: '1rem 1.5rem', borderRadius: '10px', border: '1px solid var(--color-border)' }}>
               <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.85rem' }}>
-                <Sparkles size={16} style={{ color: 'var(--amber-gold)', flexShrink: 0, marginTop: '0.1rem' }} />
+                <Sparkles size={16} style={{ color: 'var(--color-accent)', flexShrink: 0, marginTop: '0.1rem' }} />
                 <span>{t.welcomeDrag}</span>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.85rem' }}>
-                <BookOpen size={16} style={{ color: 'var(--amber-gold)', flexShrink: 0, marginTop: '0.1rem' }} />
+                <BookOpen size={16} style={{ color: 'var(--color-accent)', flexShrink: 0, marginTop: '0.1rem' }} />
                 <span>{t.welcomeClick}</span>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.85rem' }}>
-                <Check size={16} style={{ color: 'var(--amber-gold)', flexShrink: 0, marginTop: '0.1rem' }} />
+                <Check size={16} style={{ color: 'var(--color-accent)', flexShrink: 0, marginTop: '0.1rem' }} />
                 <span>{t.welcomeDraw}</span>
               </div>
             </div>
@@ -806,7 +806,7 @@ function App() {
           {toast.type === 'error' ? (
             <AlertCircle size={16} style={{ color: '#e74c3c' }} />
           ) : (
-            <Check size={16} style={{ color: 'var(--amber-gold)' }} />
+            <Check size={16} style={{ color: 'var(--color-accent)' }} />
           )}
           <span>{toast.message}</span>
         </div>
