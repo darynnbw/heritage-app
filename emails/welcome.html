@@ -1,0 +1,96 @@
+<!--
+  Heritage welcome / confirm-signup email.
+
+  Paste this HTML into Supabase → Authentication → Email Templates → Confirm signup.
+  Subject:
+    Welcome to Heritage{{ if .Data.display_name }}, {{ .Data.display_name }}{{ end }}
+
+  Variables (Go templates, filled by GoTrue):
+    {{ .Data.display_name }}  — from signup options.data.display_name
+    {{ .Email }}
+    {{ .SiteURL }}            — project Site URL
+    {{ .ConfirmationURL }}    — confirm / continue link
+    {{ .RedirectTo }}
+
+  Disabled for now: Auth Confirm email is off (mailer_autoconfirm).
+  This template stays in the repo so we can turn sending back on later.
+  It only sends if you turn confirmation back on, or reuse it for Invite / Magic link.
+
+  Hero is public/email/welcome-local.png, rasterized from the local file
+  Downloads/cherry blossom-amico (1).svg (SVG also at public/email/cherry-blossom-amico.svg).
+  Hosted at {{ .SiteURL }}/email/welcome-local.png after deploy.
+  Credit: https://storyset.com/nature
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
+    <title>Welcome to Heritage</title>
+  </head>
+  <body style="margin:0;padding:0;background-color:#f8fafc;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color:#f8fafc;">
+      <tr>
+        <td align="center" style="padding:32px 16px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="560" style="max-width:560px;width:100%;background-color:#ffffff;border:1px solid #cbd5e1;border-radius:16px;">
+            <tr>
+              <td style="padding:32px 32px 0;font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#0f172a;">
+                <p style="margin:0;font-size:13px;letter-spacing:0.08em;text-transform:uppercase;color:#0f766e;font-weight:600;">
+                  Heritage
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding:16px 32px 0;">
+                <img
+                  src="{{ .SiteURL }}/email/welcome-local.png"
+                  width="480"
+                  alt=""
+                  style="display:block;width:100%;max-width:480px;height:auto;border:0;"
+                />
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:8px 32px 0;font-family:Lora,Georgia,'Times New Roman',serif;color:#0f172a;">
+                <h1 style="margin:0;font-size:28px;line-height:1.25;font-weight:600;">
+                  {{ if .Data.display_name }}Welcome, {{ .Data.display_name }}.{{ else }}Welcome to Heritage.{{ end }}
+                </h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:16px 32px 0;font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:16px;line-height:1.6;color:#334155;">
+                <p style="margin:0;">
+                  This is where you keep the stories of the people you love — in your words, for your family.
+                </p>
+                <p style="margin:16px 0 0;">
+                  Start with one relative and one memory. That is enough.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:28px 32px 0;" align="left">
+                <a
+                  href="{{ .ConfirmationURL }}"
+                  style="display:inline-block;background-color:#0f766e;color:#ffffff;font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:16px;font-weight:600;line-height:1;text-decoration:none;padding:16px 24px;border-radius:12px;"
+                >
+                  Open Heritage
+                </a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:24px 32px 32px;font-family:'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;line-height:1.5;color:#64748b;">
+                <p style="margin:0;">
+                  Sent to {{ .Email }}. If you did not create this account, you can ignore this email.
+                </p>
+                <p style="margin:12px 0 0;">
+                  <a href="https://storyset.com/nature" style="color:#0f766e;text-decoration:underline;">Nature illustrations by Storyset</a>
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

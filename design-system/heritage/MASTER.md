@@ -45,11 +45,27 @@ Keep illustration SVGs on `#0F766E` / `#0f766e`. Official Google/Apple mark fill
 
 ## Space, radius, touch
 
-Use `--space-1` … `--space-16` (4/8 rhythm, rem).  
+Use `--space-1` … `--space-16` (4/8 rhythm, rem). No one-off px.  
 Radius: `--radius-sm` / `--radius` / `--radius-lg`.  
 **Touch:** `--touch` (`2.75rem` / 44px) on every control. Do not shrink buttons below that.  
 Layout: `--page-width`, `--gutter`, `--tab-h`.  
 Icons: `--icon-sm` … `--icon-tab`.
+
+**One owner.** Parent `gap` *or* child `margin` — not both on the same edge. Stacking them (e.g. `gap: 4px` plus label `margin-bottom: 8px`) is how “weird” 12px gaps appear.
+
+**Proximity — only when a group sits inside a box.** Space between related pieces must be *smaller* than the box padding, or the content does not read as one unit. Use this on the Home prompt card, empty states, and any card whose question/heading shares the box with actions. Do **not** copy those numbers onto feed or person cards (those stay denser `--space-4` padding — list items, not a hero).
+
+| Situation | Token | When it applies |
+|-----------|--------|-----------------|
+| Label → input / select / textarea | `--space-2` (8px), parent `gap` | Every form field, including optional Question. Tight: the label names that control. Do not stretch this to match section gaps. |
+| Controls in one cluster (button row) | `--space-3` (12px) | Buttons that are alternatives to each other, not to the copy above. |
+| Question / heading → actions inside a card | `--space-4` mobile, `--space-5` desktop | Prompt card (and similar). Must stay tighter than that card’s padding. |
+| Field → next field | `--space-5` (20px) | Form stacks (write, onboarding). Between fields, not inside a field. |
+| Page heading → first field / section | `--space-6` mobile, `--space-8` desktop | “Add story” → the form. Heading is a different group. |
+| Card padding (prompt hero only) | even `--space-6`; desktop `--space-8` | All four sides equal. Extra top padding to “float” the question is not a hierarchy tool. |
+| Page sections (prompt vs feed) | `--space-6` mobile, `--space-8` desktop | Larger than anything inside either section. |
+
+Canonical CSS: `.mvp-prompt-card`, `.mvp-field`, `.mvp-write`, `.mvp-write-main` in `src/mvp/mvp.css`.
 
 ---
 
@@ -73,7 +89,7 @@ Lucide only. `currentColor`. Decorative icons: `aria-hidden`. No emoji-as-icon.
 | Story read | Modest `illustration-reading.svg` above the title; story text stays the focus |
 | Write | None |
 | Settings | None (credits link Storyset) |
-| Not found | `illustration-not-found.svg` (404 landscape) + “Go home” |
+| Not found | `illustration-not-found.svg` + “Go home”. Open `/not-found` or a missing `/people/:id` / `/stories/:id`. |
 
 `illustration-journal.svg` is for empty writing states only — not forms, not story read.
 
@@ -86,6 +102,8 @@ Lucide only. `currentColor`. Decorative icons: `aria-hidden`. No emoji-as-icon.
 - **Ghost:** paper + `--line` border
 - **Danger:** `--danger` / `--on-accent`
 - **Empty:** `.mvp-empty-state` — icon, title, body, optional CTA
+- **Prompt card:** even padding; `gap` (not quote margin) between question and actions
+- **Field:** flex column, `gap: var(--space-2)` between label and box; no extra margin on `.mvp-label`
 - **One focal point per screen**
 
 ---
@@ -97,3 +115,6 @@ Lucide only. `currentColor`. Decorative icons: `aria-hidden`. No emoji-as-icon.
 - Large illustration where content should lead
 - Hover-only actions; missing empty/error states
 - Touch targets under 44px
+- Gap + child margin on the same edge
+- Asymmetric card padding to “fix” hierarchy (use type/weight, then even padding)
+- Label→box gap that does not match other fields on the same form

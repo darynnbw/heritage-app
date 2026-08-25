@@ -21,5 +21,14 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": [
+    "src/App.tsx",
+    "src/db.ts",
+    "src/locales.ts",
+    "src/types.ts",
+    "src/index.css",
+    "src/components",
+    "src/lib/utils.ts"
+  ]
 }

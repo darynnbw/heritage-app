@@ -1,3 +1,9 @@
+export type SessionUser = {
+  id: string
+  displayName: string
+  email: string
+}
+
 export type Relative = {
   id: string
   userId: string
@@ -15,17 +21,6 @@ export type Story = {
   createdAt: string
 }
 
-export type User = {
-  username: string
-  password: string
-}
-
-export type HeritageDB = {
-  users: User[]
-  relatives: Relative[]
-  stories: Story[]
-}
-
 export type Screen =
   | 'welcome'
   | 'login'
@@ -39,5 +34,6 @@ export type Screen =
   | 'story'
   | 'write'
   | 'settings'
+  | 'not-found'
 
 export type Tab = 'home' | 'people' | 'settings'

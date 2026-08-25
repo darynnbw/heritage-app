@@ -1,13 +1,15 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import {
   ChevronLeft,
   Home,
   Lock,
+  Mail,
   Settings,
   User,
   Users,
   type LucideIcon,
 } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 import welcomeHeroUrl from '../assets/illustration-welcome.svg'
 import readingIllustrationUrl from '../assets/illustration-reading.svg'
 import journalIllustrationUrl from '../assets/illustration-journal.svg'
@@ -15,8 +17,9 @@ import peopleIllustrationUrl from '../assets/illustration-people.svg'
 import notFoundIllustrationUrl from '../assets/illustration-not-found.svg'
 import settingsIllustrationUrl from '../assets/cherry-blossom-cuate-1.svg'
 import { HOME_PROMPTS, RELATIONSHIP_SUGGESTIONS } from './prompts'
-import { store } from './store'
-import type { Relative, Screen, Story, Tab } from './types'
+import { messageFromError, store } from './store'
+import { locationFromPath, pushPath, replacePath } from './routes'
+import type { Relative, Screen, SessionUser, Story, Tab } from './types'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -37,12 +40,12 @@ function personLabel(person: Relative) {
 }
 
 export function HeritageMvp() {
-  const [userId, setUserId] = useState<string | null>(() => store.getSession())
-  const [screen, setScreen] = useState<Screen>(() => {
-    const session = store.getSession()
-    if (!session) return 'welcome'
-    return store.relatives(session).length === 0 ? 'onboarding-intro' : 'home'
-  })
+  const [session, setSession] = useState<SessionUser | null>(null)
+  const [relatives, setRelatives] = useState<Relative[]>([])
+  const [stories, setStories] = useState<Story[]>([])
+  const [ready, setReady] = useState(false)
+  const [bootError, setBootError] = useState('')
+  const [screen, setScreen] = useState<Screen>('welcome')
   const [tab, setTab] = useState<Tab>('home')
   const [promptIndex, setPromptIndex] = useState(0)
   const [relativeId, setRelativeId] = useState<string | null>(null)
@@ -50,36 +53,128 @@ export function HeritageMvp() {
   const [writePrompt, setWritePrompt] = useState('')
   const [editingStoryId, setEditingStoryId] = useState<string | null>(null)
   const [storyReturn, setStoryReturn] = useState<'home' | 'relative'>('home')
-  const [tick, setTick] = useState(0)
+  const appliedBootRoute = useRef(false)
 
-  const refresh = () => setTick((value) => value + 1)
-
-  const relatives = useMemo(
-    () => (userId ? store.relatives(userId) : []),
-    [userId, tick],
-  )
-  const stories = useMemo(
-    () => (userId ? store.stories(userId) : []),
-    [userId, tick],
-  )
-
-  const relative = relatives.find((item) => item.id === relativeId) ?? null
+  const userId = session?.id ?? null
   const story = stories.find((item) => item.id === storyId) ?? null
+  const relative =
+    relatives.find((item) => item.id === relativeId) ??
+    relatives.find((item) => item.id === story?.relativeId) ??
+    null
   const prompt = HOME_PROMPTS[promptIndex % HOME_PROMPTS.length]
   const showMobileTabs = screen === 'home' || screen === 'people' || screen === 'relative' || screen === 'settings'
-  const showDesktopNav = Boolean(userId) && !['welcome', 'login', 'signup', 'onboarding-intro', 'onboarding-relative', 'onboarding-story'].includes(screen)
+  const showDesktopNav = Boolean(userId) && !['welcome', 'login', 'signup', 'onboarding-intro', 'onboarding-relative', 'onboarding-story', 'not-found'].includes(screen)
+
+  function applyLibrary(library: { user: SessionUser; relatives: Relative[]; stories: Story[] }) {
+    setSession(library.user)
+    setRelatives(library.relatives)
+    setStories(library.stories)
+  }
+
+  function applyLocation(next: ReturnType<typeof locationFromPath>, nextStories: Story[] = stories) {
+    const matchedStory = next.storyId ? nextStories.find((item) => item.id === next.storyId) : undefined
+    setScreen(next.screen)
+    setTab(next.tab)
+    setRelativeId(next.relativeId ?? matchedStory?.relativeId ?? null)
+    setStoryId(next.storyId)
+  }
+
+  async function refreshLibrary() {
+    const library = await store.loadLibrary()
+    applyLibrary(library)
+    return library
+  }
+
+  useEffect(() => {
+    let cancelled = false
+    let receivedAuthEvent = false
+
+    async function hydrate(userId: string | null) {
+      if (!userId) {
+        if (cancelled) return
+        setSession(null)
+        setRelatives([])
+        setStories([])
+        setBootError('')
+        setReady(true)
+        return
+      }
+      try {
+        const library = await store.loadLibrary()
+        if (cancelled) return
+        applyLibrary(library)
+        setBootError('')
+      } catch (error) {
+        if (!cancelled) setBootError(messageFromError(error))
+      } finally {
+        if (!cancelled) setReady(true)
+      }
+    }
+
+    const { data } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (event === 'TOKEN_REFRESHED') return
+      receivedAuthEvent = true
+      void hydrate(nextSession?.user.id ?? null)
+    })
+
+    void supabase.auth.getSession().then(({ data: sessionData }) => {
+      if (cancelled || receivedAuthEvent) return
+      void hydrate(sessionData.session?.user.id ?? null)
+    })
+
+    return () => {
+      cancelled = true
+      data.subscription.unsubscribe()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!ready || appliedBootRoute.current) return
+    appliedBootRoute.current = true
+    const loc = locationFromPath(window.location.pathname, session?.id ?? null)
+    if (session && (loc.screen === 'welcome' || loc.screen === 'login' || loc.screen === 'signup')) {
+      if (relatives.length === 0) {
+        setScreen('onboarding-intro')
+        replacePath('/')
+        return
+      }
+      setTab('home')
+      setScreen('home')
+      replacePath('/home')
+      return
+    }
+    applyLocation(loc, stories)
+  }, [ready, session, relatives, stories])
+
+  useEffect(() => {
+    function onPop() {
+      applyLocation(locationFromPath(window.location.pathname, session?.id ?? null))
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [session, stories])
 
   function goTab(next: Tab) {
     setTab(next)
-    if (next === 'home') setScreen('home')
-    if (next === 'people') setScreen('people')
-    if (next === 'settings') setScreen('settings')
+    if (next === 'home') {
+      setScreen('home')
+      pushPath('/home')
+    }
+    if (next === 'people') {
+      setScreen('people')
+      pushPath('/people')
+    }
+    if (next === 'settings') {
+      setScreen('settings')
+      pushPath('/settings')
+    }
   }
 
   function openRelative(id: string) {
     setRelativeId(id)
     setTab('people')
     setScreen('relative')
+    pushPath(`/people/${id}`)
   }
 
   function openStory(id: string, from: 'home' | 'relative') {
@@ -88,6 +183,7 @@ export function HeritageMvp() {
     setRelativeId(found?.relativeId ?? relativeId)
     setStoryReturn(from)
     setScreen('story')
+    pushPath(`/stories/${id}`)
   }
 
   function startWrite(nextPrompt: string, presetRelativeId: string | null = null) {
@@ -97,21 +193,50 @@ export function HeritageMvp() {
     setScreen('write')
   }
 
-  function afterAuth(name: string, isNew: boolean) {
-    setUserId(name)
-    if (isNew || store.relatives(name).length === 0) {
+  async function afterAuth(isNew: boolean) {
+    const library = await refreshLibrary()
+    if (isNew || library.relatives.length === 0) {
       setScreen('onboarding-intro')
+      replacePath('/')
       return
     }
     setTab('home')
     setScreen('home')
+    replacePath('/home')
   }
 
   function goHome() {
     setTab('home')
     setRelativeId(null)
     setStoryId(null)
-    setScreen('home')
+    if (session) {
+      setScreen('home')
+      pushPath('/home')
+      return
+    }
+    setScreen('welcome')
+    pushPath('/')
+  }
+
+  if (!ready) {
+    return (
+      <div className="mvp mvp-boot">
+        <p className="mvp-brand">Heritage</p>
+        <p className="mvp-boot-copy">Opening your stories…</p>
+      </div>
+    )
+  }
+
+  if (bootError) {
+    return (
+      <div className="mvp mvp-boot">
+        <p className="mvp-brand">Heritage</p>
+        <p className="mvp-error">{bootError}</p>
+        <button className="mvp-btn mvp-btn-primary" type="button" onClick={() => window.location.reload()}>
+          Try again
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -123,12 +248,44 @@ export function HeritageMvp() {
 
         {screen === 'welcome' && (
           <WelcomeScreen
-            onLogin={() => setScreen('login')}
-            onSignup={() => setScreen('signup')}
+            onLogin={() => {
+              setScreen('login')
+              pushPath('/login')
+            }}
+            onSignup={() => {
+              setScreen('signup')
+              pushPath('/signup')
+            }}
           />
         )}
-        {screen === 'login' && <AuthScreen mode="login" onDone={afterAuth} onSwitch={() => setScreen('signup')} onBack={() => setScreen('welcome')} />}
-        {screen === 'signup' && <AuthScreen mode="signup" onDone={afterAuth} onSwitch={() => setScreen('login')} onBack={() => setScreen('welcome')} />}
+        {screen === 'login' && (
+          <AuthScreen
+            mode="login"
+            onDone={afterAuth}
+            onSwitch={() => {
+              setScreen('signup')
+              pushPath('/signup')
+            }}
+            onBack={() => {
+              setScreen('welcome')
+              pushPath('/')
+            }}
+          />
+        )}
+        {screen === 'signup' && (
+          <AuthScreen
+            mode="signup"
+            onDone={afterAuth}
+            onSwitch={() => {
+              setScreen('login')
+              pushPath('/login')
+            }}
+            onBack={() => {
+              setScreen('welcome')
+              pushPath('/')
+            }}
+          />
+        )}
         {screen === 'onboarding-intro' && (
           <OnboardingIntro
             onContinue={() => setScreen('onboarding-relative')}
@@ -137,12 +294,11 @@ export function HeritageMvp() {
         )}
         {screen === 'onboarding-relative' && userId && (
           <OnboardingRelative
-            userId={userId}
             existing={relative}
             onBack={() => setScreen('onboarding-intro')}
-            onContinue={(id) => {
+            onContinue={async (id) => {
               setRelativeId(id)
-              refresh()
+              await refreshLibrary()
               setScreen('onboarding-story')
             }}
             onSkip={goHome}
@@ -150,13 +306,13 @@ export function HeritageMvp() {
         )}
         {screen === 'onboarding-story' && userId && relative && (
           <OnboardingStory
-            userId={userId}
             relative={relative}
             onBack={() => setScreen('onboarding-relative')}
-            onSaved={() => {
-              refresh()
+            onSaved={async () => {
+              await refreshLibrary()
               setTab('people')
               setScreen('relative')
+              pushPath(`/people/${relative.id}`)
             }}
             onSkip={goHome}
           />
@@ -180,22 +336,25 @@ export function HeritageMvp() {
             onAdd={() => startWrite('')}
           />
         )}
+        {screen === 'not-found' && <NotFoundScreen onHome={goHome} />}
         {screen === 'relative' && userId && relative && (
           <RelativeScreen
             relative={relative}
-            stories={store.storiesFor(userId, relative.id)}
+            stories={stories.filter((item) => item.relativeId === relative.id)}
             onBack={() => {
               setTab('people')
               setScreen('people')
+              pushPath('/people')
             }}
             onOpenStory={(id) => openStory(id, 'relative')}
             onWrite={() => startWrite('', relative.id)}
-            onDelete={() => {
-              store.deleteRelative(relative.id)
-              refresh()
+            onDelete={async () => {
+              await store.deleteRelative(relative.id)
+              await refreshLibrary()
               setRelativeId(null)
               setTab('people')
               setScreen('people')
+              pushPath('/people')
             }}
           />
         )}
@@ -222,9 +381,9 @@ export function HeritageMvp() {
               setRelativeId(story.relativeId)
               setScreen('write')
             }}
-            onDelete={() => {
-              store.deleteStory(story.id)
-              refresh()
+            onDelete={async () => {
+              await store.deleteStory(story.id)
+              await refreshLibrary()
               if (storyReturn === 'relative') {
                 setTab('people')
                 setScreen('relative')
@@ -240,11 +399,10 @@ export function HeritageMvp() {
         )}
         {screen === 'write' && userId && (
           <WriteScreen
-            userId={userId}
             relatives={relatives}
             prompt={writePrompt}
             presetRelativeId={relativeId}
-            editing={editingStoryId ? store.story(userId, editingStoryId) : undefined}
+            editing={editingStoryId ? stories.find((item) => item.id === editingStoryId) : undefined}
             backLabel={
               editingStoryId
                 ? 'Story'
@@ -262,23 +420,28 @@ export function HeritageMvp() {
                 setScreen('home')
               }
             }}
-            onSaved={(saved) => {
-              refresh()
+            onSaved={async (saved) => {
+              await refreshLibrary()
               setStoryId(saved.id)
               setRelativeId(saved.relativeId)
               setStoryReturn(tab === 'home' ? 'home' : 'relative')
               setScreen('story')
+              pushPath(`/stories/${saved.id}`)
             }}
-            onRefreshRelatives={refresh}
+            onRefreshRelatives={refreshLibrary}
           />
         )}
-        {screen === 'settings' && userId && (
+        {screen === 'settings' && session && (
           <SettingsScreen
-            userId={userId}
-            onSignOut={() => {
-              store.setSession(null)
-              setUserId(null)
+            displayName={session.displayName}
+            email={session.email}
+            onSignOut={async () => {
+              await store.signOut()
+              setSession(null)
+              setRelatives([])
+              setStories([])
               setScreen('welcome')
+              replacePath('/')
             }}
           />
         )}
@@ -379,13 +542,25 @@ function SocialDivider() {
   )
 }
 
-function SocialButtons() {
+function SocialButtons({
+  disabled,
+  onError,
+}: {
+  disabled: boolean
+  onError: (message: string) => void
+}) {
+  async function start(provider: 'google' | 'apple') {
+    const result = await store.signInWithProvider(provider)
+    if (!result.ok) onError(result.error)
+  }
+
   return (
     <div className="auth-social-row">
       <button
         type="button"
         className="auth-social-btn"
-        onClick={() => alert('Google sign-in not yet connected — add your OAuth provider here.')}
+        disabled={disabled}
+        onClick={() => void start('google')}
         aria-label="Continue with Google"
       >
         <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -399,7 +574,8 @@ function SocialButtons() {
       <button
         type="button"
         className="auth-social-btn"
-        onClick={() => alert('Apple sign-in not yet connected — add your OAuth provider here.')}
+        disabled={disabled}
+        onClick={() => void start('apple')}
         aria-label="Continue with Apple"
       >
         <svg width="20" height="20" viewBox="0 0 814 1000" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
@@ -418,31 +594,47 @@ function AuthScreen({
   onBack,
 }: {
   mode: 'login' | 'signup'
-  onDone: (username: string, isNew: boolean) => void
+  onDone: (isNew: boolean) => void | Promise<void>
   onSwitch: () => void
   onBack: () => void
 }) {
-  const [username, setUsername] = useState(mode === 'login' ? 'daryna' : '')
-  const [password, setPassword] = useState(mode === 'login' ? '1234' : '')
+  const [displayName, setDisplayName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const [busy, setBusy] = useState(false)
 
-  function submit(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault()
-    if (mode === 'signup') {
-      const result = store.signup(username, password)
+    setError('')
+    setNotice('')
+    setBusy(true)
+    try {
+      if (mode === 'signup') {
+        const result = await store.signup(displayName, email, password)
+        if (!result.ok) {
+          setError(result.error)
+          return
+        }
+        if (result.needsConfirmation) {
+          setNotice('Check your email to finish creating your account.')
+          return
+        }
+        await onDone(true)
+        return
+      }
+      const result = await store.login(email, password)
       if (!result.ok) {
         setError(result.error)
         return
       }
-      onDone(username.trim(), true)
-      return
+      await onDone(false)
+    } catch (caught) {
+      setError(messageFromError(caught))
+    } finally {
+      setBusy(false)
     }
-    const user = store.login(username, password)
-    if (!user) {
-      setError('Check your name and password.')
-      return
-    }
-    onDone(user.username, false)
   }
 
   return (
@@ -453,20 +645,39 @@ function AuthScreen({
           {mode === 'login' ? 'Welcome back' : 'Create account'}
         </h1>
         <div className="auth-title-accent" />
-        <form onSubmit={submit} className="auth-form">
+        <form onSubmit={(event) => void submit(event)} className="auth-form">
+          {mode === 'signup' && (
+            <div className="mvp-field">
+              <label className="mvp-label" htmlFor="auth-name-signup">
+                Your name
+              </label>
+              <div className="mvp-input-wrapper">
+                <User className="mvp-input-icon" aria-hidden="true" />
+                <input
+                  id="auth-name-signup"
+                  className="mvp-input with-icon"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  autoComplete="name"
+                  placeholder="Enter your name"
+                />
+              </div>
+            </div>
+          )}
           <div className="mvp-field">
-            <label className="mvp-label" htmlFor={`auth-username-${mode}`}>
-              {mode === 'login' ? 'Name' : 'Your name'}
+            <label className="mvp-label" htmlFor={`auth-email-${mode}`}>
+              Email
             </label>
             <div className="mvp-input-wrapper">
-              <User className="mvp-input-icon" aria-hidden="true" />
+              <Mail className="mvp-input-icon" aria-hidden="true" />
               <input
-                id={`auth-username-${mode}`}
+                id={`auth-email-${mode}`}
                 className="mvp-input with-icon"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                autoComplete="username"
-                placeholder={mode === 'login' ? 'Enter your name' : 'Enter your name'}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+                placeholder="Enter your email"
               />
             </div>
           </div>
@@ -486,16 +697,18 @@ function AuthScreen({
             </div>
           </div>
           {error && <p className="mvp-error">{error}</p>}
+          {notice && <p className="mvp-notice">{notice}</p>}
           <button
             className="mvp-btn mvp-btn-primary mvp-btn-block auth-submit"
             type="submit"
             id={`auth-submit-${mode}`}
+            disabled={busy}
           >
-            {mode === 'login' ? 'Log in' : 'Sign up'}
+            {busy ? (mode === 'login' ? 'Logging in…' : 'Creating account…') : mode === 'login' ? 'Log in' : 'Sign up'}
           </button>
         </form>
         <SocialDivider />
-        <SocialButtons />
+        <SocialButtons disabled={busy} onError={setError} />
         <button className="mvp-switch auth-switch" type="button" onClick={onSwitch}>
           {mode === 'login'
             ? <>No account yet? <span className="auth-switch-link">Sign up</span></>
@@ -552,24 +765,24 @@ function OnboardingIntro({
 }
 
 function OnboardingRelative({
-  userId,
   existing,
   onBack,
   onContinue,
   onSkip,
 }: {
-  userId: string
   existing: Relative | null
   onBack: () => void
-  onContinue: (relativeId: string) => void
+  onContinue: (relativeId: string) => void | Promise<void>
   onSkip: () => void
 }) {
   const [name, setName] = useState(existing?.name ?? '')
   const [relationship, setRelationship] = useState(existing?.relationship ?? '')
   const [nameError, setNameError] = useState('')
   const [relationshipError, setRelationshipError] = useState('')
+  const [saveError, setSaveError] = useState('')
+  const [busy, setBusy] = useState(false)
 
-  function continueOnboarding() {
+  async function continueOnboarding() {
     let hasError = false
     if (!name.trim()) {
       setNameError('Add their name before saving.')
@@ -581,13 +794,20 @@ function OnboardingRelative({
     }
     if (hasError) return
 
-    const saved = store.saveRelative({
-      id: existing?.id,
-      userId,
-      name: name.trim(),
-      relationship: relationship.trim(),
-    })
-    onContinue(saved.id)
+    setBusy(true)
+    setSaveError('')
+    try {
+      const saved = await store.saveRelative({
+        id: existing?.id,
+        name: name.trim(),
+        relationship: relationship.trim(),
+      })
+      await onContinue(saved.id)
+    } catch (error) {
+      setSaveError(messageFromError(error))
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -607,7 +827,10 @@ function OnboardingRelative({
           onChange={(val) => { setRelationship(val); setRelationshipError('') }}
           error={relationshipError}
         />
-        <button className="mvp-btn mvp-btn-primary mvp-btn-block" onClick={continueOnboarding}>Continue</button>
+        <button className="mvp-btn mvp-btn-primary mvp-btn-block" onClick={() => void continueOnboarding()} disabled={busy}>
+          {busy ? 'Saving…' : 'Continue'}
+        </button>
+        {saveError && <p className="mvp-error">{saveError}</p>}
         <div className="mvp-skip">
           <button className="mvp-switch" type="button" onClick={onSkip}>
             Go to Home instead
@@ -619,36 +842,41 @@ function OnboardingRelative({
 }
 
 function OnboardingStory({
-  userId,
   relative,
   onBack,
   onSaved,
   onSkip,
 }: {
-  userId: string
   relative: Relative
   onBack: () => void
-  onSaved: () => void
+  onSaved: () => void | Promise<void>
   onSkip: () => void
 }) {
   const [title, setTitle] = useState('')
   const [prompt, setPrompt] = useState('')
   const [text, setText] = useState('')
   const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
 
-  function save() {
+  async function save() {
     if (!text.trim()) {
       setError('Write something you want to remember before saving.')
       return
     }
-    store.saveStory({
-      userId,
-      relativeId: relative.id,
-      title: title.trim(),
-      prompt: prompt.trim(),
-      text: text.trim(),
-    })
-    onSaved()
+    setBusy(true)
+    try {
+      await store.saveStory({
+        relativeId: relative.id,
+        title: title.trim(),
+        prompt: prompt.trim(),
+        text: text.trim(),
+      })
+      await onSaved()
+    } catch (caught) {
+      setError(messageFromError(caught))
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -671,7 +899,9 @@ function OnboardingStory({
           <textarea className="mvp-textarea story" value={text} onChange={(event) => { setText(event.target.value); setError('') }} />
           {error && <p className="mvp-error">{error}</p>}
         </label>
-        <button className="mvp-btn mvp-btn-primary mvp-btn-block" onClick={save}>Save story</button>
+        <button className="mvp-btn mvp-btn-primary mvp-btn-block" onClick={() => void save()} disabled={busy}>
+          {busy ? 'Saving…' : 'Save story'}
+        </button>
         <div className="mvp-skip">
           <button className="mvp-switch" type="button" onClick={onSkip}>
             Skip this story
@@ -814,7 +1044,7 @@ function RelativeScreen({
   onBack: () => void
   onOpenStory: (id: string) => void
   onWrite: () => void
-  onDelete: () => void
+  onDelete: () => void | Promise<void>
 }) {
   const [confirming, setConfirming] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -858,7 +1088,7 @@ function RelativeScreen({
         </div>
         <div className="mvp-relative-remove">
           <button className="mvp-switch" type="button" onClick={() => setConfirming(true)}>
-            Remove from Heritage
+            Remove this person
           </button>
         </div>
 
@@ -867,7 +1097,7 @@ function RelativeScreen({
             <div className="mvp-modal-card" onClick={(event) => event.stopPropagation()}>
               <h2 className="mvp-modal-title">Remove {relative.name}?</h2>
               <p className="mvp-modal-msg">
-                Their stories will be removed too. This can&apos;t be undone.
+                This also removes every story about them. That can&apos;t be undone.
               </p>
               <div className="mvp-modal-actions">
                 <button className="mvp-btn mvp-btn-ghost" type="button" onClick={() => setConfirming(false)}>
@@ -878,14 +1108,18 @@ function RelativeScreen({
                   type="button"
                   disabled={isDeleting}
                   onClick={() => {
-                    setIsDeleting(true)
-                    setTimeout(() => {
-                      setConfirming(false)
-                      onDelete()
-                    }, 300)
+                    void (async () => {
+                      setIsDeleting(true)
+                      try {
+                        await onDelete()
+                        setConfirming(false)
+                      } catch {
+                        setIsDeleting(false)
+                      }
+                    })()
                   }}
                 >
-                  {isDeleting ? 'Removing…' : 'Remove'}
+                  {isDeleting ? 'Removing…' : 'Remove them'}
                 </button>
               </div>
             </div>
@@ -909,7 +1143,7 @@ function StoryScreen({
   backLabel: string
   onBack: () => void
   onEdit: () => void
-  onDelete: () => void
+  onDelete: () => void | Promise<void>
 }) {
   const hasTitle = Boolean(story.title?.trim())
   const hasPrompt = Boolean(story.prompt?.trim())
@@ -987,11 +1221,15 @@ function StoryScreen({
                   className="mvp-btn mvp-btn-danger"
                   disabled={isDeleting}
                   onClick={() => {
-                    setIsDeleting(true)
-                    setTimeout(() => {
-                      setConfirming(false)
-                      onDelete()
-                    }, 300)
+                    void (async () => {
+                      setIsDeleting(true)
+                      try {
+                        await onDelete()
+                        setConfirming(false)
+                      } catch {
+                        setIsDeleting(false)
+                      }
+                    })()
                   }}
                 >
                   {isDeleting ? 'Deleting…' : 'Delete'}
@@ -1006,7 +1244,6 @@ function StoryScreen({
 }
 
 function WriteScreen({
-  userId,
   relatives,
   prompt,
   presetRelativeId,
@@ -1016,15 +1253,14 @@ function WriteScreen({
   onSaved,
   onRefreshRelatives,
 }: {
-  userId: string
   relatives: Relative[]
   prompt: string
   presetRelativeId: string | null
   editing?: Story
   backLabel: string
   onCancel: () => void
-  onSaved: (story: Story) => void
-  onRefreshRelatives?: () => void
+  onSaved: (story: Story) => void | Promise<void>
+  onRefreshRelatives?: () => void | Promise<unknown>
 }) {
   const [selectedId, setSelectedId] = useState(
     editing?.relativeId ?? presetRelativeId ?? relatives[0]?.id ?? '',
@@ -1039,9 +1275,19 @@ function WriteScreen({
   const [relationshipError, setRelationshipError] = useState('')
   const [titleError, setTitleError] = useState('')
   const [textError, setTextError] = useState('')
+  const [saveError, setSaveError] = useState('')
   const [isSaving, setIsSaving] = useState(false)
 
-  function save() {
+  async function save() {
+    if (!titleValue.trim()) {
+      setTitleError('Add a title before saving.')
+      return
+    }
+    if (!text.trim()) {
+      setTextError('Write something you want to remember before saving.')
+      return
+    }
+
     let relativeId = selectedId
     if (addingNew || !relativeId) {
       if (!addingNew) {
@@ -1059,41 +1305,41 @@ function WriteScreen({
       }
       if (hasError) return
 
-      const created = store.saveRelative({
-        userId,
-        name: newName.trim(),
-        relationship: newRelationship.trim(),
-      })
-      relativeId = created.id
-      if (onRefreshRelatives) {
-        onRefreshRelatives()
+      setIsSaving(true)
+      setSaveError('')
+      try {
+        const created = await store.saveRelative({
+          name: newName.trim(),
+          relationship: newRelationship.trim(),
+        })
+        relativeId = created.id
+        await onRefreshRelatives?.()
+      } catch (error) {
+        setSaveError(messageFromError(error))
+        setIsSaving(false)
+        return
       }
     }
-    if (!titleValue.trim()) {
-      setTitleError('Add a title before saving.')
-      return
-    }
-    if (!text.trim()) {
-      setTextError('Write something you want to remember before saving.')
-      return
-    }
-    const saved = store.saveStory({
-      id: editing?.id,
-      userId,
-      relativeId,
-      title: titleValue.trim(),
-      prompt: promptValue.trim(),
-      text: text.trim(),
-      createdAt: editing?.createdAt,
-    })
+
     setIsSaving(true)
-    setTimeout(() => {
+    setSaveError('')
+    try {
+      const saved = await store.saveStory({
+        id: editing?.id,
+        relativeId,
+        title: titleValue.trim(),
+        prompt: promptValue.trim(),
+        text: text.trim(),
+      })
+      await onSaved(saved)
+    } catch (error) {
+      setSaveError(messageFromError(error))
+    } finally {
       setIsSaving(false)
-      onSaved(saved)
-    }, 300)
+    }
   }
 
-  function handleAddPerson() {
+  async function handleAddPerson() {
     let hasError = false
     if (!newName.trim()) {
       setNameError('Add their name before saving.')
@@ -1105,20 +1351,22 @@ function WriteScreen({
     }
     if (hasError) return
 
-    const created = store.saveRelative({
-      userId,
-      name: newName.trim(),
-      relationship: newRelationship.trim(),
-    })
-    if (onRefreshRelatives) {
-      onRefreshRelatives()
+    setSaveError('')
+    try {
+      const created = await store.saveRelative({
+        name: newName.trim(),
+        relationship: newRelationship.trim(),
+      })
+      await onRefreshRelatives?.()
+      setSelectedId(created.id)
+      setAddingNew(false)
+      setNewName('')
+      setNewRelationship('')
+      setNameError('')
+      setRelationshipError('')
+    } catch (error) {
+      setSaveError(messageFromError(error))
     }
-    setSelectedId(created.id)
-    setAddingNew(false)
-    setNewName('')
-    setNewRelationship('')
-    setNameError('')
-    setRelationshipError('')
   }
 
   function handleCancelAdd() {
@@ -1139,8 +1387,8 @@ function WriteScreen({
       </header>
       <main className="mvp-body mvp-write">
         <h1 className="mvp-h1 mvp-write-title">{editing ? 'Edit story' : 'Add story'}</h1>
-        {!editing && (
-          <div className="mvp-write-side">
+        <div className="mvp-write-main">
+          {!editing && (
             <div className="mvp-write-person-selector">
               <span className="mvp-label">Who is this about?</span>
               {!addingNew && (
@@ -1191,7 +1439,7 @@ function WriteScreen({
                     <button
                       type="button"
                       className="mvp-btn mvp-btn-primary mvp-add-person-confirm"
-                      onClick={handleAddPerson}
+                        onClick={() => void handleAddPerson()}
                     >
                       Add person
                     </button>
@@ -1199,9 +1447,7 @@ function WriteScreen({
                 </div>
               )}
             </div>
-          </div>
-        )}
-        <div className="mvp-write-main">
+          )}
           <label className="mvp-field">
             <span className="mvp-label">Title</span>
             <input
@@ -1226,16 +1472,39 @@ function WriteScreen({
             <textarea className={`mvp-textarea story${textError ? ' mvp-input-error' : ''}`} value={text} onChange={(event) => { setText(event.target.value); setTextError('') }} />
             {textError && <p className="mvp-error">{textError}</p>}
           </label>
-          <button className="mvp-btn mvp-btn-primary mvp-btn-block mvp-write-save" onClick={save} disabled={isSaving}>
+          <button className="mvp-btn mvp-btn-primary mvp-btn-block mvp-write-save" onClick={() => void save()} disabled={isSaving}>
             {isSaving ? 'Saving…' : editing ? 'Save changes' : 'Save story'}
           </button>
+          {saveError && <p className="mvp-error">{saveError}</p>}
         </div>
       </main>
     </>
   )
 }
 
-function SettingsScreen({ userId, onSignOut }: { userId: string; onSignOut: () => void }) {
+function SettingsScreen({
+  displayName,
+  email,
+  onSignOut,
+}: {
+  displayName: string
+  email: string
+  onSignOut: () => void | Promise<void>
+}) {
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  async function signOut() {
+    setBusy(true)
+    setError('')
+    try {
+      await onSignOut()
+    } catch (caught) {
+      setError(messageFromError(caught))
+      setBusy(false)
+    }
+  }
+
   return (
     <>
       <header className="mvp-top mvp-top-brand">
@@ -1248,7 +1517,8 @@ function SettingsScreen({ userId, onSignOut }: { userId: string; onSignOut: () =
             <User aria-hidden="true" />
             <div>
               <p className="mvp-settings-kicker">Account</p>
-              <p className="mvp-settings-value">{userId}</p>
+              <p className="mvp-settings-value">{displayName}</p>
+              {email && <p className="mvp-settings-kicker">{email}</p>}
             </div>
           </div>
         </div>
@@ -1256,8 +1526,9 @@ function SettingsScreen({ userId, onSignOut }: { userId: string; onSignOut: () =
         <div className="mvp-settings-illust" aria-hidden="true">
           <img src={settingsIllustrationUrl} alt="" decoding="async" />
         </div>
-        <button className="mvp-btn mvp-btn-secondary mvp-btn-block" type="button" onClick={onSignOut}>
-          Sign out
+        {error && <p className="mvp-error">{error}</p>}
+        <button className="mvp-btn mvp-btn-secondary mvp-btn-block" type="button" onClick={() => void signOut()} disabled={busy}>
+          {busy ? 'Signing out…' : 'Sign out'}
         </button>
         <div className="mvp-credits">
           <h2 className="mvp-credits-title">Credits</h2>

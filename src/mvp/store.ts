@@ -1,166 +1,282 @@
-import type { HeritageDB, Relative, Story, User } from './types'
+import type { User } from '@supabase/supabase-js'
+import { supabase } from '../lib/supabase'
+import type { Relative, SessionUser, Story } from './types'
 
-const STORAGE_KEY = 'heritage.mvp.v1'
-const SESSION_KEY = 'heritage.mvp.session'
-
-const ELEANOR_ID = 'rel-eleanor'
-const USER = 'daryna'
-
-const seed: HeritageDB = {
-  users: [{ username: USER, password: '1234' }],
-  relatives: [
-    {
-      id: ELEANOR_ID,
-      userId: USER,
-      name: 'Eleanor',
-      relationship: 'grandmother',
-    },
-  ],
-  stories: [
-    {
-      id: 'story-school',
-      userId: USER,
-      relativeId: ELEANOR_ID,
-      title: '10th Grade History with Mr. Davies',
-      prompt: 'What was their favorite subject at school?',
-      text: 'She mentioned she loved history and literature because of her 10th grade teacher, Mr. Davies.',
-      createdAt: '2026-05-14T16:00:00.000Z',
-    },
-  ],
-}
-
-function load(): HeritageDB {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return structuredClone(seed)
-    const parsed = JSON.parse(raw) as HeritageDB
-    if (!parsed.users?.length) return structuredClone(seed)
-    parsed.stories = (parsed.stories || []).filter((s) => s.id !== 'story-attic')
-    return parsed
-  } catch {
-    return structuredClone(seed)
+export class StoreError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'StoreError'
   }
 }
 
-function save(db: HeritageDB) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(db))
+export type AuthResult =
+  | { ok: true; needsConfirmation: boolean }
+  | { ok: false; error: string }
+
+export type Library = {
+  user: SessionUser
+  relatives: Relative[]
+  stories: Story[]
 }
 
-function id(prefix: string) {
-  return `${prefix}-${crypto.randomUUID()}`
+function mapAuthMessage(message: string): string {
+  const lower = message.toLowerCase()
+  if (lower.includes('invalid login')) return 'Check your email and password.'
+  if (lower.includes('already registered') || lower.includes('already been registered')) {
+    return 'That email is already in use.'
+  }
+  if (lower.includes('password should be') || lower.includes('password is known')) {
+    return 'Use at least 6 characters for your password.'
+  }
+  if (lower.includes('email not confirmed')) return 'Confirm your email before logging in.'
+  if (lower.includes('rate limit') || lower.includes('too many')) {
+    return 'Too many tries. Wait a moment and try again.'
+  }
+  if (lower.includes('unable to validate email') || lower.includes('invalid email')) {
+    return 'Enter a valid email address.'
+  }
+  if (lower.includes('unsupported provider') || lower.includes('provider is not enabled')) {
+    return 'That sign-in method is not connected yet.'
+  }
+  if (lower.includes('failed to fetch') || lower.includes('network')) {
+    return 'Check your connection and try again.'
+  }
+  return 'Something went wrong. Try again.'
+}
+
+export function messageFromError(error: unknown): string {
+  if (error instanceof StoreError) return error.message
+  if (error && typeof error === 'object' && 'message' in error) {
+    return mapAuthMessage(String((error as { message: string }).message))
+  }
+  return 'Something went wrong. Try again.'
+}
+
+function throwIf(error: { message: string } | null): void {
+  if (error) throw new StoreError(mapAuthMessage(error.message))
+}
+
+function mapRelative(row: {
+  id: string
+  user_id: string
+  name: string
+  relationship: string
+}): Relative {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    name: row.name,
+    relationship: row.relationship,
+  }
+}
+
+function mapStory(row: {
+  id: string
+  user_id: string
+  relative_id: string
+  title: string
+  prompt: string
+  body: string
+  created_at: string
+}): Story {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    relativeId: row.relative_id,
+    title: row.title,
+    prompt: row.prompt,
+    text: row.body,
+    createdAt: row.created_at,
+  }
+}
+
+function displayNameFromUser(user: User, fallback?: string | null): string {
+  const meta = user.user_metadata ?? {}
+  const fromMeta = [meta.display_name, meta.full_name, meta.name]
+    .map((value) => (typeof value === 'string' ? value.trim() : ''))
+    .find(Boolean)
+  if (fromMeta) return fromMeta.slice(0, 80)
+  if (fallback?.trim()) return fallback.trim().slice(0, 80)
+  const fromEmail = user.email?.split('@')[0]?.trim()
+  return (fromEmail || 'Friend').slice(0, 80)
+}
+
+async function requireUser(): Promise<User> {
+  const { data, error } = await supabase.auth.getUser()
+  throwIf(error)
+  if (!data.user) throw new StoreError('Sign in to continue.')
+  return data.user
+}
+
+async function sessionUserFrom(user: User): Promise<SessionUser> {
+  const { data, error } = await supabase.from('profiles').select('display_name').eq('id', user.id).maybeSingle()
+  throwIf(error)
+
+  let displayName = data?.display_name?.trim() || ''
+  if (!displayName) {
+    displayName = displayNameFromUser(user)
+    const { error: upsertError } = await supabase.from('profiles').upsert({
+      id: user.id,
+      display_name: displayName,
+    })
+    throwIf(upsertError)
+  }
+
+  return {
+    id: user.id,
+    displayName,
+    email: user.email ?? '',
+  }
 }
 
 export const store = {
-  getSession(): string | null {
-    return localStorage.getItem(SESSION_KEY)
+  async loadLibrary(): Promise<Library> {
+    const user = await requireUser()
+    const sessionUser = await sessionUserFrom(user)
+
+    const [relativesRes, storiesRes] = await Promise.all([
+      supabase.from('relatives').select('id, user_id, name, relationship').order('name'),
+      supabase.from('stories').select('id, user_id, relative_id, title, prompt, body, created_at').order('created_at', { ascending: false }),
+    ])
+
+    throwIf(relativesRes.error)
+    throwIf(storiesRes.error)
+
+    return {
+      user: sessionUser,
+      relatives: (relativesRes.data ?? []).map(mapRelative),
+      stories: (storiesRes.data ?? []).map(mapStory),
+    }
   },
 
-  setSession(username: string | null) {
-    if (username) localStorage.setItem(SESSION_KEY, username)
-    else localStorage.removeItem(SESSION_KEY)
-  },
-
-  login(username: string, password: string): User | null {
-    const user = load().users.find(
-      (item) =>
-        item.username.toLowerCase() === username.trim().toLowerCase() &&
-        item.password === password,
-    )
-    if (!user) return null
-    this.setSession(user.username)
-    return user
-  },
-
-  signup(username: string, password: string): { ok: true } | { ok: false; error: string } {
-    const db = load()
-    const name = username.trim()
-    if (!name) return { ok: false, error: 'Add a name to sign up.' }
+  async signup(displayName: string, email: string, password: string): Promise<AuthResult> {
+    const name = displayName.trim()
+    const address = email.trim()
+    if (!name) return { ok: false, error: 'Add your name to sign up.' }
+    if (!address) return { ok: false, error: 'Add your email to sign up.' }
     if (!password) return { ok: false, error: 'Add a password to sign up.' }
-    if (db.users.some((item) => item.username.toLowerCase() === name.toLowerCase())) {
-      return { ok: false, error: 'That name is already in use.' }
-    }
-    db.users.push({ username: name, password })
-    save(db)
-    this.setSession(name)
-    return { ok: true }
+    if (password.length < 6) return { ok: false, error: 'Use at least 6 characters for your password.' }
+
+    const { data, error } = await supabase.auth.signUp({
+      email: address,
+      password,
+      options: { data: { display_name: name } },
+    })
+    if (error) return { ok: false, error: mapAuthMessage(error.message) }
+    return { ok: true, needsConfirmation: !data.session }
   },
 
-  relatives(userId: string): Relative[] {
-    return load()
-      .relatives.filter((item) => item.userId === userId)
-      .sort((a, b) => a.name.localeCompare(b.name))
+  async login(email: string, password: string): Promise<AuthResult> {
+    const address = email.trim()
+    if (!address) return { ok: false, error: 'Add your email to log in.' }
+    if (!password) return { ok: false, error: 'Add your password to log in.' }
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: address,
+      password,
+    })
+    if (error) return { ok: false, error: mapAuthMessage(error.message) }
+    return { ok: true, needsConfirmation: false }
   },
 
-  stories(userId: string): Story[] {
-    return load()
-      .stories.filter((item) => item.userId === userId)
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+  async signInWithProvider(provider: 'google' | 'apple'): Promise<AuthResult> {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: window.location.origin },
+    })
+    if (error) return { ok: false, error: mapAuthMessage(error.message) }
+    return { ok: true, needsConfirmation: false }
   },
 
-  storiesFor(userId: string, relativeId: string): Story[] {
-    return this.stories(userId).filter((item) => item.relativeId === relativeId)
+  async signOut() {
+    const { error } = await supabase.auth.signOut()
+    throwIf(error)
   },
 
-  relative(userId: string, relativeId: string): Relative | undefined {
-    return this.relatives(userId).find((item) => item.id === relativeId)
-  },
+  async saveRelative(input: { id?: string; name: string; relationship: string }): Promise<Relative> {
+    const user = await requireUser()
+    const name = input.name.trim()
+    const relationship = input.relationship.trim()
+    if (!name) throw new StoreError('Add their name before saving.')
+    if (!relationship) throw new StoreError('Add their relationship to you before saving.')
 
-  story(userId: string, storyId: string): Story | undefined {
-    return this.stories(userId).find((item) => item.id === storyId)
-  },
-
-  saveRelative(input: Omit<Relative, 'id'> & { id?: string }): Relative {
-    const db = load()
     if (input.id) {
-      db.relatives = db.relatives.map((item) =>
-        item.id === input.id ? { ...item, name: input.name, relationship: input.relationship } : item,
-      )
-      save(db)
-      return db.relatives.find((item) => item.id === input.id)!
+      const { data, error } = await supabase
+        .from('relatives')
+        .update({ name, relationship })
+        .eq('id', input.id)
+        .select('id, user_id, name, relationship')
+        .single()
+      throwIf(error)
+      if (!data) throw new StoreError('Could not save that person.')
+      return mapRelative(data)
     }
-    const created: Relative = { ...input, id: id('rel') }
-    db.relatives.push(created)
-    save(db)
-    return created
+
+    const { data, error } = await supabase
+      .from('relatives')
+      .insert({ user_id: user.id, name, relationship })
+      .select('id, user_id, name, relationship')
+      .single()
+    throwIf(error)
+    if (!data) throw new StoreError('Could not save that person.')
+    return mapRelative(data)
   },
 
-  saveStory(input: Omit<Story, 'id' | 'createdAt'> & { id?: string; createdAt?: string }): Story {
-    const db = load()
+  async saveStory(input: {
+    id?: string
+    relativeId: string
+    title: string
+    prompt: string
+    text: string
+  }): Promise<Story> {
+    const user = await requireUser()
+    const title = input.title.trim()
+    const prompt = input.prompt.trim()
+    const body = input.text.trim()
+    if (!body) throw new StoreError('Write something you want to remember before saving.')
+
     if (input.id) {
-      db.stories = db.stories.map((item) =>
-        item.id === input.id
-          ? {
-              ...item,
-              relativeId: input.relativeId,
-              title: input.title,
-              prompt: input.prompt,
-              text: input.text,
-            }
-          : item,
-      )
-      save(db)
-      return db.stories.find((item) => item.id === input.id)!
+      const { data, error } = await supabase
+        .from('stories')
+        .update({
+          relative_id: input.relativeId,
+          title,
+          prompt,
+          body,
+        })
+        .eq('id', input.id)
+        .select('id, user_id, relative_id, title, prompt, body, created_at')
+        .single()
+      throwIf(error)
+      if (!data) throw new StoreError('Could not save that story.')
+      return mapStory(data)
     }
-    const created: Story = {
-      ...input,
-      id: id('story'),
-      createdAt: input.createdAt ?? new Date().toISOString(),
-    }
-    db.stories.push(created)
-    save(db)
-    return created
+
+    const { data, error } = await supabase
+      .from('stories')
+      .insert({
+        user_id: user.id,
+        relative_id: input.relativeId,
+        title,
+        prompt,
+        body,
+      })
+      .select('id, user_id, relative_id, title, prompt, body, created_at')
+      .single()
+    throwIf(error)
+    if (!data) throw new StoreError('Could not save that story.')
+    return mapStory(data)
   },
 
-  deleteStory(storyId: string) {
-    const db = load()
-    db.stories = db.stories.filter((item) => item.id !== storyId)
-    save(db)
+  async deleteStory(storyId: string) {
+    await requireUser()
+    const { error } = await supabase.from('stories').delete().eq('id', storyId)
+    throwIf(error)
   },
 
-  deleteRelative(relativeId: string) {
-    const db = load()
-    db.relatives = db.relatives.filter((item) => item.id !== relativeId)
-    db.stories = db.stories.filter((item) => item.relativeId !== relativeId)
-    save(db)
+  async deleteRelative(relativeId: string) {
+    await requireUser()
+    const { error } = await supabase.from('relatives').delete().eq('id', relativeId)
+    throwIf(error)
   },
 }
