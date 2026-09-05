@@ -105,6 +105,16 @@ export const HOME_PROMPTS = [
   'What is the single best memory you have with them?',
 ]
 
+export const RELATIONSHIP_CHIPS = [
+  'grandmother',
+  'grandfather',
+  'mother',
+  'father',
+  'aunt',
+  'uncle',
+  'friend',
+] as const
+
 export const RELATIONSHIP_SUGGESTIONS = [
   'grandmother',
   'grandfather',

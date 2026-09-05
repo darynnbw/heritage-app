@@ -28,7 +28,6 @@ Hex lives in `:root` only. Components use tokens.
 | Danger | `--danger` | `#b91c1c` |
 | Danger hover | `--danger-hover` | `#991b1b` |
 | Danger soft | `--danger-soft` | `#fde8e8` |
-| Focus ring | `--focus-ring` | `rgba(15, 118, 110, 0.35)` |
 | Scrim | `--scrim` | `rgba(15, 23, 42, 0.4)` |
 
 Keep illustration SVGs on `#0F766E` / `#0f766e`. Official Google/Apple mark fills are the only other raw hex in components.
@@ -46,7 +45,7 @@ Keep illustration SVGs on `#0F766E` / `#0f766e`. Official Google/Apple mark fill
 ## Space, radius, touch
 
 Use `--space-1` … `--space-16` (4/8 rhythm, rem). No one-off px.  
-Radius: `--radius-sm` / `--radius` / `--radius-lg`.  
+Radius: `--radius-sm` (6px) chips · `--radius` (8px) small chrome · `--radius-control` (10px) inputs and buttons — iOS rounded-rect, not pills · `--radius-lg` (16px) cards and empty states.  
 **Touch:** `--touch` (`2.75rem` / 44px) on every control. Do not shrink buttons below that.  
 Layout: `--page-width`, `--gutter`, `--tab-h`.  
 Icons: `--icon-sm` … `--icon-tab`.
@@ -57,7 +56,7 @@ Icons: `--icon-sm` … `--icon-tab`.
 
 | Situation | Token | When it applies |
 |-----------|--------|-----------------|
-| Label → input / select / textarea | `--space-2` (8px), parent `gap` | Every form field, including optional Question. Tight: the label names that control. Do not stretch this to match section gaps. |
+| Label → input / select / textarea | `--space-3` (12px), parent `gap` | Every form field. 8px felt glued; 16px felt too open. Keep this smaller than field→field (`--space-5`). |
 | Controls in one cluster (button row) | `--space-3` (12px) | Buttons that are alternatives to each other, not to the copy above. |
 | Question / heading → actions inside a card | `--space-4` mobile, `--space-5` desktop | Prompt card (and similar). Must stay tighter than that card’s padding. |
 | Field → next field | `--space-5` (20px) | Form stacks (write, onboarding). Between fields, not inside a field. |
@@ -88,8 +87,8 @@ Lucide only. `currentColor`. Decorative icons: `aria-hidden`. No emoji-as-icon.
 | Relative | None (empty = `illustration-journal.svg` + CTA) |
 | Story read | Modest `illustration-reading.svg` above the title; story text stays the focus |
 | Write | None |
-| Settings | None (credits link Storyset) |
-| Not found | `illustration-not-found.svg` + “Go home”. Open `/not-found` or a missing `/people/:id` / `/stories/:id`. |
+| Settings | Cherry blossom at the bottom of the page. Credits: one Storyset link. |
+| Not found | Full page, no empty-state card. Brand in the header. `illustration-not-found.svg`, one headline, one sentence, Go home. Open `/not-found` or a missing `/people/:id` / `/stories/:id`. |
 
 `illustration-journal.svg` is for empty writing states only — not forms, not story read.
 
@@ -97,13 +96,14 @@ Lucide only. `currentColor`. Decorative icons: `aria-hidden`. No emoji-as-icon.
 
 ## Components
 
-- **Primary:** `--accent` / `--on-accent`, hover `--accent-hover`
+- **Primary:** `--accent` / `--on-accent`, hover `--accent-hover`. No glow, halo, or drop shadow.
+- **Focus:** `2px solid var(--ink)` outline, offset 2px. Never a translucent teal ring.
 - **Secondary:** `--fill` / `--ink`
 - **Ghost:** paper + `--line` border
 - **Danger:** `--danger` / `--on-accent`
 - **Empty:** `.mvp-empty-state` — icon, title, body, optional CTA
 - **Prompt card:** even padding; `gap` (not quote margin) between question and actions
-- **Field:** flex column, `gap: var(--space-2)` between label and box; no extra margin on `.mvp-label`
+- **Field:** flex column, `gap: var(--space-3)` between label and box; no extra margin on `.mvp-label`
 - **One focal point per screen**
 
 ---
@@ -111,6 +111,7 @@ Lucide only. `currentColor`. Decorative icons: `aria-hidden`. No emoji-as-icon.
 ## Anti-patterns
 
 - Gold / black luxury, Cormorant, Montserrat, liquid glass
+- Glow on buttons or fields (soft teal rings, colored drop shadows, halo focus)
 - Raw hex in TSX (except brand marks)
 - Large illustration where content should lead
 - Hover-only actions; missing empty/error states

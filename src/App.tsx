@@ -113,7 +113,7 @@ const INITIAL_STORIES: Story[] = [
     date: { en: 'Summer, 1995', uk: 'Літо 1995 року' },
     content: {
       en: "Every Sunday afternoon, the kitchen would fill with steam and the scent of fried onions. Grandma would hand-pinch each pierogi, teaching us to press the edges exactly three times. 'A leaking pierogi is a crime against history,' she'd joke.",
-      uk: 'Щонеділі по обіді кухня наповнювалася парою та ароматом смаженої цибулі. Бабуся вручну ліпила кожен вареник, вчачи нас защіпувати краї рівно три рази. «Дірявий вареник — це злочин перед історією», — жартувала вона.'
+      uk: 'Щонеділі по обіді кухня наповнювалася парою та ароматом смаженої цибулі. Бабуся вручну ліпила кожен вареник, вчачи нас защіпувати краї рівно три рази. «Дірявий вареник це злочин перед історією», жартувала вона.'
     },
     contributor: { en: 'Aunt Rosa', uk: 'Тітка Роза' }
   },
@@ -823,7 +823,7 @@ function App() {
           const personStories = stories.filter((s) => s.personId === person.id);
           return (
             <section key={person.id} className="print-person-section">
-              <h2 className="print-person-title">{getLocalizedValue(person.name)} — {getLocalizedValue(person.relationship)}</h2>
+              <h2 className="print-person-title">{getLocalizedValue(person.name)}, {getLocalizedValue(person.relationship)}</h2>
               {person.bio && <p className="print-person-bio">"{getLocalizedValue(person.bio)}"</p>}
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>

@@ -149,10 +149,8 @@ export const store = {
     }
   },
 
-  async signup(displayName: string, email: string, password: string): Promise<AuthResult> {
-    const name = displayName.trim()
+  async signup(email: string, password: string): Promise<AuthResult> {
     const address = email.trim()
-    if (!name) return { ok: false, error: 'Add your name to sign up.' }
     if (!address) return { ok: false, error: 'Add your email to sign up.' }
     if (!password) return { ok: false, error: 'Add a password to sign up.' }
     if (password.length < 6) return { ok: false, error: 'Use at least 6 characters for your password.' }
@@ -160,7 +158,6 @@ export const store = {
     const { data, error } = await supabase.auth.signUp({
       email: address,
       password,
-      options: { data: { display_name: name } },
     })
     if (error) return { ok: false, error: mapAuthMessage(error.message) }
     return { ok: true, needsConfirmation: !data.session }
@@ -179,18 +176,38 @@ export const store = {
     return { ok: true, needsConfirmation: false }
   },
 
-  async signInWithProvider(provider: 'google' | 'apple'): Promise<AuthResult> {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: window.location.origin },
+  async resendSignupConfirmation(email: string) {
+    const address = email.trim()
+    if (!address) throw new StoreError('Add your email to continue.')
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: address,
     })
-    if (error) return { ok: false, error: mapAuthMessage(error.message) }
-    return { ok: true, needsConfirmation: false }
+    throwIf(error)
   },
 
   async signOut() {
     const { error } = await supabase.auth.signOut()
     throwIf(error)
+  },
+
+  async updateDisplayName(displayName: string): Promise<SessionUser> {
+    const user = await requireUser()
+    const name = displayName.trim()
+    if (!name) throw new StoreError('Add your name to continue.')
+
+    const { error: profileError } = await supabase.from('profiles').upsert({
+      id: user.id,
+      display_name: name,
+    })
+    throwIf(profileError)
+
+    const { error: metaError } = await supabase.auth.updateUser({
+      data: { display_name: name },
+    })
+    throwIf(metaError)
+
+    return sessionUserFrom(user)
   },
 
   async saveRelative(input: { id?: string; name: string; relationship: string }): Promise<Relative> {

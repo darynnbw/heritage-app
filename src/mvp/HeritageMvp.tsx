@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import {
   ChevronLeft,
+  Eye,
+  EyeOff,
   Home,
-  Lock,
-  Mail,
+  LogOut,
+  MoreHorizontal,
+  PenLine,
+  Plus,
   Settings,
-  User,
   Users,
   type LucideIcon,
 } from 'lucide-react'
@@ -16,17 +19,15 @@ import journalIllustrationUrl from '../assets/illustration-journal.svg'
 import peopleIllustrationUrl from '../assets/illustration-people.svg'
 import notFoundIllustrationUrl from '../assets/illustration-not-found.svg'
 import settingsIllustrationUrl from '../assets/cherry-blossom-cuate-1.svg'
-import { HOME_PROMPTS, RELATIONSHIP_SUGGESTIONS } from './prompts'
+import { HOME_PROMPTS, RELATIONSHIP_CHIPS, RELATIONSHIP_SUGGESTIONS } from './prompts'
 import { messageFromError, store } from './store'
-import { locationFromPath, pushPath, replacePath } from './routes'
+import { locationFromPath, pathForLocation, pushPath, replacePath } from './routes'
+import { DictateControl } from './DictateControl'
+import { StoryListenRow } from './StoryListenRow'
 import type { Relative, Screen, SessionUser, Story, Tab } from './types'
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-}
-
-function formatLongDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 }
 
 function snippet(text: string) {
@@ -37,6 +38,87 @@ function personLabel(person: Relative) {
   if (!person.relationship) return person.name
   const relation = person.relationship.charAt(0).toUpperCase() + person.relationship.slice(1)
   return `${relation} ${person.name}`
+}
+
+function onboardingNameInitial(user: SessionUser): string {
+  const name = user.displayName.trim()
+  if (!name || name === 'Friend') return ''
+  const fromEmail = user.email.split('@')[0]?.trim().toLowerCase()
+  if (fromEmail && name.toLowerCase() === fromEmail) return ''
+  return name
+}
+
+function storyDraftKey(kind: 'write' | 'onboarding', options: { storyId?: string; relativeId?: string | null; prompt?: string }) {
+  if (kind === 'write' && options.storyId) return `heritage:draft:story:${options.storyId}`
+  if (kind === 'onboarding') return `heritage:draft:onboarding:${options.relativeId ?? 'unknown'}`
+  return `heritage:draft:write:${options.relativeId ?? 'picker'}:${options.prompt?.trim() || 'freewrite'}`
+}
+
+function loadDraft(key: string) {
+  if (typeof window === 'undefined') return ''
+  return window.localStorage.getItem(key) ?? ''
+}
+
+function saveDraft(key: string, value: string) {
+  if (typeof window === 'undefined') return
+  const trimmed = value.trim()
+  if (!trimmed) {
+    window.localStorage.removeItem(key)
+    return
+  }
+  window.localStorage.setItem(key, value)
+}
+
+function clearDraft(key: string) {
+  if (typeof window === 'undefined') return
+  window.localStorage.removeItem(key)
+}
+
+function useBeforeUnloadWhen(enabled: boolean) {
+  useEffect(() => {
+    if (!enabled) return
+
+    function onBeforeUnload(event: BeforeUnloadEvent) {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [enabled])
+}
+
+function LeaveConfirm({
+  open,
+  title = 'Discard your changes?',
+  body = 'You have unsaved changes. If you leave now, they will be lost.',
+  onStay,
+  onDiscard,
+}: {
+  open: boolean
+  title?: string
+  body?: string
+  onStay: () => void
+  onDiscard: () => void
+}) {
+  if (!open) return null
+
+  return (
+    <div className="mvp-modal-backdrop" onClick={onStay}>
+      <div className="mvp-modal-card" onClick={(event) => event.stopPropagation()}>
+        <h2 className="mvp-modal-title">{title}</h2>
+        <p className="mvp-modal-msg">{body}</p>
+        <div className="mvp-modal-actions">
+          <button className="mvp-btn mvp-btn-ghost" type="button" onClick={onStay}>
+            Keep editing
+          </button>
+          <button className="mvp-btn mvp-btn-danger" type="button" onClick={onDiscard}>
+            Discard draft
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export function HeritageMvp() {
@@ -53,6 +135,9 @@ export function HeritageMvp() {
   const [writePrompt, setWritePrompt] = useState('')
   const [editingStoryId, setEditingStoryId] = useState<string | null>(null)
   const [storyReturn, setStoryReturn] = useState<'home' | 'relative'>('home')
+  const [authRedirectPath, setAuthRedirectPath] = useState<string | null>(null)
+  const [authEmailDraft, setAuthEmailDraft] = useState('')
+  const [authNotice, setAuthNotice] = useState('')
   const appliedBootRoute = useRef(false)
 
   const userId = session?.id ?? null
@@ -63,7 +148,7 @@ export function HeritageMvp() {
     null
   const prompt = HOME_PROMPTS[promptIndex % HOME_PROMPTS.length]
   const showMobileTabs = screen === 'home' || screen === 'people' || screen === 'relative' || screen === 'settings'
-  const showDesktopNav = Boolean(userId) && !['welcome', 'login', 'signup', 'onboarding-intro', 'onboarding-relative', 'onboarding-story', 'not-found'].includes(screen)
+  const showDesktopNav = Boolean(userId) && !['welcome', 'login', 'signup', 'onboarding-intro', 'onboarding-name', 'onboarding-relative', 'onboarding-story', 'add-relative', 'edit-relative', 'write', 'not-found'].includes(screen)
 
   function applyLibrary(library: { user: SessionUser; relatives: Relative[]; stories: Story[] }) {
     setSession(library.user)
@@ -73,10 +158,21 @@ export function HeritageMvp() {
 
   function applyLocation(next: ReturnType<typeof locationFromPath>, nextStories: Story[] = stories) {
     const matchedStory = next.storyId ? nextStories.find((item) => item.id === next.storyId) : undefined
+    const matchedEditStory = next.editingStoryId
+      ? nextStories.find((item) => item.id === next.editingStoryId)
+      : undefined
     setScreen(next.screen)
     setTab(next.tab)
-    setRelativeId(next.relativeId ?? matchedStory?.relativeId ?? null)
+    setRelativeId(next.relativeId ?? matchedStory?.relativeId ?? matchedEditStory?.relativeId ?? null)
     setStoryId(next.storyId)
+    setWritePrompt(next.writePrompt ?? '')
+    setEditingStoryId(next.editingStoryId)
+    setAuthRedirectPath(next.redirectPath)
+  }
+
+  function applyResolvedLocation(next: ReturnType<typeof locationFromPath>, nextStories: Story[] = stories) {
+    applyLocation(next, nextStories)
+    replacePath(pathForLocation(next))
   }
 
   async function refreshLibrary() {
@@ -131,7 +227,7 @@ export function HeritageMvp() {
   useEffect(() => {
     if (!ready || appliedBootRoute.current) return
     appliedBootRoute.current = true
-    const loc = locationFromPath(window.location.pathname, session?.id ?? null)
+    const loc = locationFromPath(window.location.pathname, session?.id ?? null, window.location.search)
     if (session && (loc.screen === 'welcome' || loc.screen === 'login' || loc.screen === 'signup')) {
       if (relatives.length === 0) {
         setScreen('onboarding-intro')
@@ -143,12 +239,12 @@ export function HeritageMvp() {
       replacePath('/home')
       return
     }
-    applyLocation(loc, stories)
+    applyResolvedLocation(loc, stories)
   }, [ready, session, relatives, stories])
 
   useEffect(() => {
     function onPop() {
-      applyLocation(locationFromPath(window.location.pathname, session?.id ?? null))
+      applyResolvedLocation(locationFromPath(window.location.pathname, session?.id ?? null, window.location.search))
     }
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
@@ -177,6 +273,19 @@ export function HeritageMvp() {
     pushPath(`/people/${id}`)
   }
 
+  function openAddRelative() {
+    setTab('people')
+    setScreen('add-relative')
+    pushPath('/people/new')
+  }
+
+  function openEditRelative(id: string) {
+    setRelativeId(id)
+    setTab('people')
+    setScreen('edit-relative')
+    pushPath(`/people/${id}/edit`)
+  }
+
   function openStory(id: string, from: 'home' | 'relative') {
     const found = stories.find((item) => item.id === id)
     setStoryId(id)
@@ -190,18 +299,45 @@ export function HeritageMvp() {
     setWritePrompt(nextPrompt)
     setEditingStoryId(null)
     setRelativeId(presetRelativeId)
+    setStoryId(null)
     setScreen('write')
+    const params = new URLSearchParams()
+    if (presetRelativeId) params.set('person', presetRelativeId)
+    if (nextPrompt.trim()) params.set('prompt', nextPrompt.trim())
+    const query = params.toString()
+    pushPath(query ? `/stories/new?${query}` : '/stories/new')
+  }
+
+  function openEditStory(story: Story) {
+    setEditingStoryId(story.id)
+    setWritePrompt(story.prompt)
+    setRelativeId(story.relativeId)
+    setStoryId(story.id)
+    setScreen('write')
+    pushPath(`/stories/${story.id}/edit`)
   }
 
   async function afterAuth(isNew: boolean) {
     const library = await refreshLibrary()
     if (isNew || library.relatives.length === 0) {
       setScreen('onboarding-intro')
+      setAuthRedirectPath(null)
       replacePath('/')
       return
     }
+
+    const redirectLocation = authRedirectPath
+      ? locationFromPath(authRedirectPath, library.user.id)
+      : null
+    if (redirectLocation && redirectLocation.screen !== 'welcome' && redirectLocation.screen !== 'login' && redirectLocation.screen !== 'signup' && redirectLocation.screen !== 'not-found') {
+      applyLocation(redirectLocation, library.stories)
+      replacePath(pathForLocation(redirectLocation))
+      return
+    }
+
     setTab('home')
     setScreen('home')
+    setAuthRedirectPath(null)
     replacePath('/home')
   }
 
@@ -262,13 +398,18 @@ export function HeritageMvp() {
           <AuthScreen
             mode="login"
             onDone={afterAuth}
-            onSwitch={() => {
+            redirectPath={authRedirectPath}
+            initialEmail={authEmailDraft}
+            initialNotice={authNotice}
+            onBack={goHome}
+            onSwitch={(options) => {
+              setAuthEmailDraft(options?.email ?? '')
+              setAuthNotice(options?.notice ?? '')
               setScreen('signup')
-              pushPath('/signup')
-            }}
-            onBack={() => {
-              setScreen('welcome')
-              pushPath('/')
+              const params = new URLSearchParams()
+              if (authRedirectPath) params.set('redirect', authRedirectPath)
+              const query = params.toString()
+              pushPath(query ? `/signup?${query}` : '/signup')
             }}
           />
         )}
@@ -276,26 +417,42 @@ export function HeritageMvp() {
           <AuthScreen
             mode="signup"
             onDone={afterAuth}
-            onSwitch={() => {
+            redirectPath={authRedirectPath}
+            initialEmail={authEmailDraft}
+            initialNotice={authNotice}
+            onBack={goHome}
+            onSwitch={(options) => {
+              setAuthEmailDraft(options?.email ?? '')
+              setAuthNotice(options?.notice ?? '')
               setScreen('login')
-              pushPath('/login')
-            }}
-            onBack={() => {
-              setScreen('welcome')
-              pushPath('/')
+              const params = new URLSearchParams()
+              if (authRedirectPath) params.set('redirect', authRedirectPath)
+              const query = params.toString()
+              pushPath(query ? `/login?${query}` : '/login')
             }}
           />
         )}
         {screen === 'onboarding-intro' && (
           <OnboardingIntro
-            onContinue={() => setScreen('onboarding-relative')}
+            onContinue={() => setScreen('onboarding-name')}
             onSkip={goHome}
+          />
+        )}
+        {screen === 'onboarding-name' && userId && session && (
+          <OnboardingName
+            initialName={onboardingNameInitial(session)}
+            onBack={() => setScreen('onboarding-intro')}
+            onContinue={async () => {
+              await refreshLibrary()
+              setScreen('onboarding-relative')
+            }}
+            onSkip={() => setScreen('onboarding-relative')}
           />
         )}
         {screen === 'onboarding-relative' && userId && (
           <OnboardingRelative
             existing={relative}
-            onBack={() => setScreen('onboarding-intro')}
+            onBack={() => setScreen('onboarding-name')}
             onContinue={async (id) => {
               setRelativeId(id)
               await refreshLibrary()
@@ -333,8 +490,36 @@ export function HeritageMvp() {
             relatives={relatives}
             stories={stories}
             onOpen={openRelative}
-            onAdd={() => startWrite('')}
+            onAddPerson={openAddRelative}
           />
+        )}
+        {screen === 'add-relative' && userId && (
+          <RelativeFormScreen
+            onBack={() => {
+              setScreen('people')
+              pushPath('/people')
+            }}
+            onSaved={async (id) => {
+              await refreshLibrary()
+              openRelative(id)
+            }}
+          />
+        )}
+        {screen === 'edit-relative' && userId && relative && (
+          <RelativeFormScreen
+            relative={relative}
+            onBack={() => {
+              setScreen('relative')
+              pushPath(`/people/${relative.id}`)
+            }}
+            onSaved={async (id) => {
+              await refreshLibrary()
+              openRelative(id)
+            }}
+          />
+        )}
+        {screen === 'edit-relative' && userId && !relative && (
+          <NotFoundScreen onHome={goHome} />
         )}
         {screen === 'not-found' && <NotFoundScreen onHome={goHome} />}
         {screen === 'relative' && userId && relative && (
@@ -348,6 +533,7 @@ export function HeritageMvp() {
             }}
             onOpenStory={(id) => openStory(id, 'relative')}
             onWrite={() => startWrite('', relative.id)}
+            onEdit={() => openEditRelative(relative.id)}
             onDelete={async () => {
               await store.deleteRelative(relative.id)
               await refreshLibrary()
@@ -365,31 +551,34 @@ export function HeritageMvp() {
           <StoryScreen
             relative={relative}
             story={story}
-            backLabel={storyReturn === 'relative' ? personLabel(relative) : 'Home'}
+            backLabel={storyReturn === 'relative' ? relative.name : 'Home'}
+            fromRelative={storyReturn === 'relative'}
             onBack={() => {
               if (storyReturn === 'relative') {
                 setTab('people')
                 setScreen('relative')
+                pushPath(`/people/${relative.id}`)
               } else {
                 setTab('home')
                 setScreen('home')
+                pushPath('/home')
               }
             }}
-            onEdit={() => {
-              setEditingStoryId(story.id)
-              setWritePrompt(story.prompt)
-              setRelativeId(story.relativeId)
-              setScreen('write')
-            }}
+            onEdit={() => openEditStory(story)}
             onDelete={async () => {
               await store.deleteStory(story.id)
               await refreshLibrary()
               if (storyReturn === 'relative') {
                 setTab('people')
                 setScreen('relative')
+                setStoryId(null)
+                pushPath(`/people/${relative.id}`)
               } else {
                 setTab('home')
                 setScreen('home')
+                setRelativeId(null)
+                setStoryId(null)
+                pushPath('/home')
               }
             }}
           />
@@ -411,19 +600,26 @@ export function HeritageMvp() {
                   : 'Home'
             }
             onCancel={() => {
-              if (editingStoryId) setScreen('story')
-              else if (relativeId && relatives.some((item) => item.id === relativeId)) {
+              if (editingStoryId) {
+                setScreen('story')
+                pushPath(`/stories/${editingStoryId}`)
+                return
+              }
+              if (relativeId && relatives.some((item) => item.id === relativeId)) {
                 setTab('people')
                 setScreen('relative')
-              } else {
-                setTab('home')
-                setScreen('home')
+                pushPath(`/people/${relativeId}`)
+                return
               }
+              setTab('home')
+              setScreen('home')
+              pushPath('/home')
             }}
             onSaved={async (saved) => {
               await refreshLibrary()
               setStoryId(saved.id)
               setRelativeId(saved.relativeId)
+              setEditingStoryId(null)
               setStoryReturn(tab === 'home' ? 'home' : 'relative')
               setScreen('story')
               pushPath(`/stories/${saved.id}`)
@@ -476,7 +672,7 @@ function TabBar({ tab, onTab }: { tab: Tab; onTab: (tab: Tab) => void }) {
         onClick={() => onTab('home')}
         aria-current={tab === 'home' ? 'page' : undefined}
       >
-        <Home aria-hidden="true" strokeWidth={tab === 'home' ? 2.4 : 1.8} />
+        <Home aria-hidden="true" strokeWidth={tab === 'home' ? 2.25 : 1.75} />
         Home
       </button>
       <button
@@ -485,7 +681,7 @@ function TabBar({ tab, onTab }: { tab: Tab; onTab: (tab: Tab) => void }) {
         onClick={() => onTab('people')}
         aria-current={tab === 'people' ? 'page' : undefined}
       >
-        <Users aria-hidden="true" strokeWidth={tab === 'people' ? 2.4 : 1.8} />
+        <Users aria-hidden="true" strokeWidth={tab === 'people' ? 2.25 : 1.75} />
         People
       </button>
       <button
@@ -494,7 +690,7 @@ function TabBar({ tab, onTab }: { tab: Tab; onTab: (tab: Tab) => void }) {
         onClick={() => onTab('settings')}
         aria-current={tab === 'settings' ? 'page' : undefined}
       >
-        <Settings aria-hidden="true" strokeWidth={tab === 'settings' ? 2.4 : 1.8} />
+        <Settings aria-hidden="true" strokeWidth={tab === 'settings' ? 2.25 : 1.75} />
         Settings
       </button>
     </nav>
@@ -532,78 +728,49 @@ function WelcomeScreen({
   )
 }
 
-function SocialDivider() {
-  return (
-    <div className="auth-divider">
-      <span className="auth-divider-line" />
-      <span className="auth-divider-text">or continue with</span>
-      <span className="auth-divider-line" />
-    </div>
-  )
-}
-
-function SocialButtons({
-  disabled,
-  onError,
-}: {
-  disabled: boolean
-  onError: (message: string) => void
-}) {
-  async function start(provider: 'google' | 'apple') {
-    const result = await store.signInWithProvider(provider)
-    if (!result.ok) onError(result.error)
-  }
-
-  return (
-    <div className="auth-social-row">
-      <button
-        type="button"
-        className="auth-social-btn"
-        disabled={disabled}
-        onClick={() => void start('google')}
-        aria-label="Continue with Google"
-      >
-        <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M47.532 24.552c0-1.636-.134-3.201-.395-4.697H24v8.882h13.204c-.57 3.067-2.3 5.664-4.899 7.41v6.162h7.929c4.636-4.27 7.298-10.556 7.298-17.757z" fill="#4285F4"/>
-          <path d="M24 48c6.48 0 11.916-2.148 15.888-5.823l-7.93-6.162c-2.202 1.476-5.022 2.35-7.958 2.35-6.12 0-11.3-4.134-13.152-9.69H2.68v6.362C6.636 42.713 14.765 48 24 48z" fill="#34A853"/>
-          <path d="M10.848 28.675A14.974 14.974 0 0 1 9.6 24c0-1.636.285-3.226.795-4.675v-6.362H2.68A23.94 23.94 0 0 0 0 24c0 3.876.93 7.541 2.68 10.675l8.168-6z" fill="#FBBC05"/>
-          <path d="M24 9.545c3.45 0 6.545 1.185 8.985 3.518l6.734-6.734C35.896 2.36 30.46 0 24 0 14.765 0 6.636 5.287 2.68 13.325l8.168 6.36C12.7 13.68 17.88 9.545 24 9.545z" fill="#EA4335"/>
-        </svg>
-        Google
-      </button>
-      <button
-        type="button"
-        className="auth-social-btn"
-        disabled={disabled}
-        onClick={() => void start('apple')}
-        aria-label="Continue with Apple"
-      >
-        <svg width="20" height="20" viewBox="0 0 814 1000" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-          <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105.3-57-155.3-127c-52.7-74.5-96.1-188.8-96.1-297.6 0-186.3 121.4-284.7 240.6-284.7 60.8 0 111.7 42.5 147.3 42.5 34 0 89.3-44.5 156.7-44.5 25.3.0 108.2 2.6 168.1 86.6zm-172.9-215.4c31.6-37.5 54.3-89.5 54.3-141.5 0-7.1-.6-14.3-1.9-20.1-51.3 1.9-113 34.3-149.3 77.1-28.3 32.5-55.6 84.5-55.6 137.2 0 7.7 1.3 15.5 1.9 18 3.2.6 8.4 1.3 13.6 1.3 46.2.0 103.7-30.9 136.9-72z"/>
-        </svg>
-        Apple
-      </button>
-    </div>
-  )
-}
-
 function AuthScreen({
   mode,
   onDone,
-  onSwitch,
   onBack,
+  onSwitch,
+  redirectPath,
+  initialEmail,
+  initialNotice,
 }: {
   mode: 'login' | 'signup'
   onDone: (isNew: boolean) => void | Promise<void>
-  onSwitch: () => void
   onBack: () => void
+  onSwitch: (options?: { email?: string; notice?: string }) => void
+  redirectPath: string | null
+  initialEmail: string
+  initialNotice: string
 }) {
-  const [displayName, setDisplayName] = useState('')
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(initialEmail)
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
+  const [notice, setNotice] = useState(initialNotice)
   const [busy, setBusy] = useState(false)
+  const [confirmationEmail, setConfirmationEmail] = useState('')
+  const destinationLabel = redirectPath?.startsWith('/stories/')
+    ? 'that story'
+    : redirectPath?.startsWith('/people')
+      ? 'that page'
+      : redirectPath?.startsWith('/settings')
+        ? 'your account'
+        : 'that page'
+  const canSubmit =
+    mode === 'signup'
+      ? Boolean(email.includes('@') && password.length >= 6)
+      : Boolean(email.trim() && password)
+
+  useEffect(() => {
+    setEmail(initialEmail)
+  }, [initialEmail])
+
+  useEffect(() => {
+    setNotice(initialNotice)
+  }, [initialNotice])
 
   async function submit(event: FormEvent) {
     event.preventDefault()
@@ -612,13 +779,14 @@ function AuthScreen({
     setBusy(true)
     try {
       if (mode === 'signup') {
-        const result = await store.signup(displayName, email, password)
+        const result = await store.signup(email, password)
         if (!result.ok) {
           setError(result.error)
           return
         }
         if (result.needsConfirmation) {
-          setNotice('Check your email to finish creating your account.')
+          setConfirmationEmail(email.trim())
+          setNotice('')
           return
         }
         await onDone(true)
@@ -637,84 +805,183 @@ function AuthScreen({
     }
   }
 
+  async function handleConfirmedEmail() {
+    setError('')
+    setNotice('')
+    setBusy(true)
+    try {
+      const { data } = await supabase.auth.getSession()
+      if (data.session) {
+        await onDone(true)
+        return
+      }
+      onSwitch({
+        email: confirmationEmail,
+        notice: 'Email confirmed. Log in to continue.',
+      })
+    } catch (caught) {
+      setError(messageFromError(caught))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function resendConfirmation() {
+    setError('')
+    setNotice('')
+    setBusy(true)
+    try {
+      await store.resendSignupConfirmation(confirmationEmail)
+      setNotice(`We sent another email to ${confirmationEmail}.`)
+    } catch (caught) {
+      setError(messageFromError(caught))
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <div className="auth-screen">
       <div className="auth-card">
         <BackControl onClick={onBack} label="Welcome" />
-        <h1 className="auth-title">
-          {mode === 'login' ? 'Welcome back' : 'Create account'}
-        </h1>
-        <div className="auth-title-accent" />
-        <form onSubmit={(event) => void submit(event)} className="auth-form">
-          {mode === 'signup' && (
-            <div className="mvp-field">
-              <label className="mvp-label" htmlFor="auth-name-signup">
-                Your name
-              </label>
-              <div className="mvp-input-wrapper">
-                <User className="mvp-input-icon" aria-hidden="true" />
+        {mode === 'signup' && confirmationEmail ? (
+          <div className="auth-confirm">
+            <div className="auth-heading">
+              <h1 className="auth-title">Check your email</h1>
+              <p className="auth-lede">
+                Open the message we sent to {confirmationEmail} to finish creating your account.
+              </p>
+              <p className="auth-lede">
+                After you confirm, come back here and log in to keep going.
+              </p>
+            </div>
+            {error && <p className="mvp-error">{error}</p>}
+            {notice && <p className="mvp-notice">{notice}</p>}
+            <div className="auth-confirm-actions">
+              <button className="mvp-btn mvp-btn-primary mvp-btn-block auth-submit" type="button" onClick={() => void handleConfirmedEmail()} disabled={busy}>
+                {busy ? 'Checking…' : 'I confirmed my email'}
+              </button>
+              <button
+                className="mvp-btn mvp-btn-ghost mvp-btn-block"
+                type="button"
+                onClick={() => {
+                  setConfirmationEmail('')
+                  setError('')
+                  setNotice('')
+                }}
+                disabled={busy}
+              >
+                Use a different email
+              </button>
+            </div>
+            <button className="mvp-switch auth-switch" type="button" onClick={() => void resendConfirmation()} disabled={busy}>
+              <span className="auth-switch-link">Send again</span>
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="auth-heading">
+              <h1 className="auth-title">
+                {mode === 'login' ? 'Welcome back' : 'Create account'}
+              </h1>
+              {redirectPath && mode === 'login' && (
+                <p className="auth-lede">Log in to open {destinationLabel}.</p>
+              )}
+              {redirectPath && mode === 'signup' && (
+                <p className="auth-lede">Create your account, then we&apos;ll take you to {destinationLabel}.</p>
+              )}
+              {mode === 'signup' && (
+                <p className="auth-lede">Save stories about people you love.</p>
+              )}
+            </div>
+            <form onSubmit={(event) => void submit(event)} className="auth-form">
+              <div className="mvp-field">
+                <label className="mvp-label" htmlFor={`auth-email-${mode}`}>
+                  Email
+                </label>
                 <input
-                  id="auth-name-signup"
-                  className="mvp-input with-icon"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  autoComplete="name"
-                  placeholder="Enter your name"
+                  id={`auth-email-${mode}`}
+                  className="mvp-input"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
                 />
               </div>
-            </div>
-          )}
-          <div className="mvp-field">
-            <label className="mvp-label" htmlFor={`auth-email-${mode}`}>
-              Email
-            </label>
-            <div className="mvp-input-wrapper">
-              <Mail className="mvp-input-icon" aria-hidden="true" />
-              <input
-                id={`auth-email-${mode}`}
-                className="mvp-input with-icon"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-                placeholder="Enter your email"
-              />
-            </div>
-          </div>
-          <div className="mvp-field">
-            <label className="mvp-label" htmlFor={`auth-password-${mode}`}>Password</label>
-            <div className="mvp-input-wrapper">
-              <Lock className="mvp-input-icon" aria-hidden="true" />
-              <input
-                id={`auth-password-${mode}`}
-                className="mvp-input with-icon"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                placeholder="Enter your password"
-              />
-            </div>
-          </div>
-          {error && <p className="mvp-error">{error}</p>}
-          {notice && <p className="mvp-notice">{notice}</p>}
-          <button
-            className="mvp-btn mvp-btn-primary mvp-btn-block auth-submit"
-            type="submit"
-            id={`auth-submit-${mode}`}
-            disabled={busy}
-          >
-            {busy ? (mode === 'login' ? 'Logging in…' : 'Creating account…') : mode === 'login' ? 'Log in' : 'Sign up'}
-          </button>
-        </form>
-        <SocialDivider />
-        <SocialButtons disabled={busy} onError={setError} />
-        <button className="mvp-switch auth-switch" type="button" onClick={onSwitch}>
-          {mode === 'login'
-            ? <>No account yet? <span className="auth-switch-link">Sign up</span></>
-            : <>Already have an account? <span className="auth-switch-link">Log in</span></>}
-        </button>
+              <div className="mvp-field">
+                <label className="mvp-label" htmlFor={`auth-password-${mode}`}>Password</label>
+                <div className="mvp-input-wrapper">
+                  <input
+                    id={`auth-password-${mode}`}
+                    className="mvp-input with-reveal"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                    minLength={mode === 'signup' ? 6 : undefined}
+                  />
+                  <button
+                    type="button"
+                    className="mvp-input-reveal"
+                    onClick={() => setShowPassword((open) => !open)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-pressed={showPassword}
+                  >
+                    {showPassword ? <EyeOff aria-hidden /> : <Eye aria-hidden />}
+                  </button>
+                </div>
+                {mode === 'signup' && (
+                  <p className="mvp-field-hint">At least 6 characters</p>
+                )}
+              </div>
+              {error && <p className="mvp-error">{error}</p>}
+              {notice && <p className="mvp-notice">{notice}</p>}
+              <button
+                className="mvp-btn mvp-btn-primary mvp-btn-block auth-submit"
+                type="submit"
+                id={`auth-submit-${mode}`}
+                disabled={busy || !canSubmit}
+              >
+                {busy ? (mode === 'login' ? 'Logging in…' : 'Creating account…') : mode === 'login' ? 'Log in' : 'Create account'}
+              </button>
+            </form>
+            <button className="mvp-switch auth-switch" type="button" onClick={() => onSwitch()}>
+              {mode === 'login'
+                ? <>No account yet? <span className="auth-switch-link">Create account</span></>
+                : <>Already have an account? <span className="auth-switch-link">Log in</span></>}
+            </button>
+          </>
+        )}
       </div>
+    </div>
+  )
+}
+
+function OnboardingProgress({ step }: { step: 1 | 2 | 3 }) {
+  return (
+    <div className="mvp-onboard-progress-wrap">
+      <div
+        className="mvp-onboard-progress"
+        role="progressbar"
+        aria-valuenow={step}
+        aria-valuemin={1}
+        aria-valuemax={3}
+        aria-label={`Step ${step} of 3`}
+      >
+        {[1, 2, 3].map((segment) => (
+          <span
+            key={segment}
+            className={[
+              'mvp-onboard-progress-seg',
+              segment < step ? 'filled' : '',
+              segment === step ? 'current' : '',
+            ].filter(Boolean).join(' ')}
+          />
+        ))}
+      </div>
+      <span className="mvp-onboard-progress-label" aria-hidden="true">
+        Step {step} of 3
+      </span>
     </div>
   )
 }
@@ -727,11 +994,11 @@ function OnboardingIntro({
   onSkip: () => void
 }) {
   return (
-    <>
+    <div className="mvp-onboard">
       <header className="mvp-top mvp-top-brand mvp-top-onboard">
         <BrandLogo />
       </header>
-      <main className="mvp-body mvp-onboard-intro">
+      <main className="mvp-body mvp-onboard-body mvp-onboard-intro">
         <div className="mvp-illust-medium">
           <img src={readingIllustrationUrl} alt="" decoding="async" />
         </div>
@@ -751,7 +1018,9 @@ function OnboardingIntro({
             <p>Keep it with the rest of your family</p>
           </li>
         </ol>
-        <button className="mvp-btn mvp-btn-primary mvp-btn-block" type="button" onClick={onContinue}>
+      </main>
+      <footer className="mvp-onboard-footer">
+        <button className="mvp-btn mvp-btn-primary mvp-btn-block mvp-btn-lg" type="button" onClick={onContinue}>
           Continue
         </button>
         <div className="mvp-skip">
@@ -759,8 +1028,111 @@ function OnboardingIntro({
             Go to Home instead
           </button>
         </div>
+      </footer>
+    </div>
+  )
+}
+
+function OnboardingName({
+  initialName,
+  onBack,
+  onContinue,
+  onSkip,
+}: {
+  initialName: string
+  onBack: () => void
+  onContinue: () => void | Promise<void>
+  onSkip: () => void
+}) {
+  const [name, setName] = useState(initialName)
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [confirmingLeave, setConfirmingLeave] = useState(false)
+  const pendingLeaveAction = useRef<(() => void | Promise<void>) | null>(null)
+  const canContinue = Boolean(name.trim())
+  const isDirty = name.trim() !== initialName.trim()
+
+  useBeforeUnloadWhen(isDirty)
+
+  function requestLeave(action: () => void | Promise<void>) {
+    if (!isDirty || busy) {
+      void action()
+      return
+    }
+    pendingLeaveAction.current = action
+    setConfirmingLeave(true)
+  }
+
+  function keepEditing() {
+    pendingLeaveAction.current = null
+    setConfirmingLeave(false)
+  }
+
+  function discardDraft() {
+    const nextAction = pendingLeaveAction.current
+    pendingLeaveAction.current = null
+    setConfirmingLeave(false)
+    if (nextAction) void nextAction()
+  }
+
+  async function continueOnboarding() {
+    if (!name.trim()) {
+      setError('Add your name to continue.')
+      return
+    }
+
+    setBusy(true)
+    setError('')
+    try {
+      await store.updateDisplayName(name.trim())
+      await onContinue()
+    } catch (caught) {
+      setError(messageFromError(caught))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="mvp-onboard">
+      <header className="mvp-top mvp-top-onboard">
+        <OnboardingProgress step={1} />
+        <BackControl onClick={() => requestLeave(onBack)} />
+      </header>
+      <main className="mvp-body mvp-onboard-body mvp-onboard-form mvp-onboard-form-single">
+        <h1 className="mvp-h1">What&apos;s your name?</h1>
+        <p className="mvp-lede mvp-onboard-form-lede">
+          So your family knows who saved these stories.
+        </p>
+        <input
+          id="onboarding-name"
+          className={`mvp-input mvp-onboard-name-input${error ? ' mvp-input-error' : ''}`}
+          value={name}
+          onChange={(event) => { setName(event.target.value); setError('') }}
+          placeholder="Your name"
+          autoComplete="name"
+          autoFocus
+          enterKeyHint="done"
+          aria-label="Your name"
+          aria-required="true"
+        />
+        {error && <p className="mvp-error">{error}</p>}
+        <button
+          className="mvp-btn mvp-btn-primary mvp-btn-block mvp-btn-lg mvp-onboard-form-submit"
+          type="button"
+          onClick={() => void continueOnboarding()}
+          disabled={busy || !canContinue}
+        >
+          {busy ? 'Saving…' : 'Continue'}
+        </button>
+        <div className="mvp-skip">
+          <button className="mvp-switch" type="button" onClick={() => requestLeave(onSkip)}>
+            Skip for now
+          </button>
+        </div>
       </main>
-    </>
+      <LeaveConfirm open={confirmingLeave} onStay={keepEditing} onDiscard={discardDraft} />
+    </div>
   )
 }
 
@@ -781,6 +1153,37 @@ function OnboardingRelative({
   const [relationshipError, setRelationshipError] = useState('')
   const [saveError, setSaveError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [confirmingLeave, setConfirmingLeave] = useState(false)
+  const pendingLeaveAction = useRef<(() => void | Promise<void>) | null>(null)
+  const canContinue = Boolean(name.trim() && relationship.trim())
+  const initialName = existing?.name ?? ''
+  const initialRelationship = existing?.relationship ?? ''
+  const isDirty =
+    name.trim() !== initialName.trim() ||
+    relationship.trim() !== initialRelationship.trim()
+
+  useBeforeUnloadWhen(isDirty)
+
+  function requestLeave(action: () => void | Promise<void>) {
+    if (!isDirty || busy) {
+      void action()
+      return
+    }
+    pendingLeaveAction.current = action
+    setConfirmingLeave(true)
+  }
+
+  function keepEditing() {
+    pendingLeaveAction.current = null
+    setConfirmingLeave(false)
+  }
+
+  function discardDraft() {
+    const nextAction = pendingLeaveAction.current
+    pendingLeaveAction.current = null
+    setConfirmingLeave(false)
+    if (nextAction) void nextAction()
+  }
 
   async function continueOnboarding() {
     let hasError = false
@@ -811,33 +1214,54 @@ function OnboardingRelative({
   }
 
   return (
-    <>
+    <div className="mvp-onboard">
       <header className="mvp-top mvp-top-onboard">
-        <BackControl onClick={onBack} />
+        <OnboardingProgress step={2} />
+        <BackControl onClick={() => requestLeave(onBack)} />
       </header>
-      <main className="mvp-body mvp-stage">
-        <h1 className="mvp-h1">Whose story would you like to preserve today?</h1>
+      <main className="mvp-body mvp-onboard-body mvp-onboard-form">
+        <h1 className="mvp-h1">Who would you like to remember?</h1>
+        <p className="mvp-lede mvp-onboard-form-lede">
+          This helps you organize stories by person. Start with someone special.
+        </p>
         <label className="mvp-field">
-          <span className="mvp-label">Their name</span>
-          <input className="mvp-input" value={name} onChange={(event) => { setName(event.target.value); setNameError('') }} placeholder="Eleanor" />
+          <span className="mvp-label">
+            Their name <span className="mvp-required">(required)</span>
+          </span>
+          <input
+            className="mvp-input"
+            value={name}
+            onChange={(event) => { setName(event.target.value); setNameError('') }}
+            placeholder="Eleanor"
+            autoComplete="name"
+            enterKeyHint="next"
+          />
           {nameError && <p className="mvp-error">{nameError}</p>}
         </label>
         <RelationshipField
           value={relationship}
           onChange={(val) => { setRelationship(val); setRelationshipError('') }}
           error={relationshipError}
+          required
         />
-        <button className="mvp-btn mvp-btn-primary mvp-btn-block" onClick={() => void continueOnboarding()} disabled={busy}>
+        {saveError && <p className="mvp-error">{saveError}</p>}
+      </main>
+      <footer className="mvp-onboard-footer">
+        <button
+          className="mvp-btn mvp-btn-primary mvp-btn-block mvp-btn-lg"
+          onClick={() => void continueOnboarding()}
+          disabled={busy || !canContinue}
+        >
           {busy ? 'Saving…' : 'Continue'}
         </button>
-        {saveError && <p className="mvp-error">{saveError}</p>}
         <div className="mvp-skip">
-          <button className="mvp-switch" type="button" onClick={onSkip}>
-            Go to Home instead
+          <button className="mvp-switch" type="button" onClick={() => requestLeave(onSkip)}>
+            Skip for now
           </button>
         </div>
-      </main>
-    </>
+      </footer>
+      <LeaveConfirm open={confirmingLeave} onStay={keepEditing} onDiscard={discardDraft} />
+    </div>
   )
 }
 
@@ -852,11 +1276,44 @@ function OnboardingStory({
   onSaved: () => void | Promise<void>
   onSkip: () => void
 }) {
-  const [title, setTitle] = useState('')
-  const [prompt, setPrompt] = useState('')
-  const [text, setText] = useState('')
+  const [promptIndex, setPromptIndex] = useState(() => Math.floor(Math.random() * HOME_PROMPTS.length))
+  const draftKey = storyDraftKey('onboarding', { relativeId: relative.id })
+  const [text, setText] = useState(() => loadDraft(draftKey))
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [confirmingLeave, setConfirmingLeave] = useState(false)
+  const pendingLeaveAction = useRef<(() => void | Promise<void>) | null>(null)
+  const prompt = HOME_PROMPTS[promptIndex % HOME_PROMPTS.length]
+  const canSave = Boolean(text.trim())
+  const isDirty = Boolean(text.trim())
+
+  useBeforeUnloadWhen(isDirty)
+
+  useEffect(() => {
+    saveDraft(draftKey, text)
+  }, [draftKey, text])
+
+  function requestLeave(action: () => void | Promise<void>) {
+    if (!isDirty || busy) {
+      void action()
+      return
+    }
+    pendingLeaveAction.current = action
+    setConfirmingLeave(true)
+  }
+
+  function keepEditing() {
+    pendingLeaveAction.current = null
+    setConfirmingLeave(false)
+  }
+
+  function discardDraft() {
+    clearDraft(draftKey)
+    const nextAction = pendingLeaveAction.current
+    pendingLeaveAction.current = null
+    setConfirmingLeave(false)
+    if (nextAction) void nextAction()
+  }
 
   async function save() {
     if (!text.trim()) {
@@ -867,10 +1324,11 @@ function OnboardingStory({
     try {
       await store.saveStory({
         relativeId: relative.id,
-        title: title.trim(),
-        prompt: prompt.trim(),
+        title: prompt.trim(),
+        prompt: '',
         text: text.trim(),
       })
+      clearDraft(draftKey)
       await onSaved()
     } catch (caught) {
       setError(messageFromError(caught))
@@ -880,35 +1338,66 @@ function OnboardingStory({
   }
 
   return (
-    <>
+    <div className="mvp-onboard">
       <header className="mvp-top mvp-top-onboard">
-        <BackControl onClick={onBack} />
+        <OnboardingProgress step={3} />
+        <BackControl onClick={() => requestLeave(onBack)} />
       </header>
-      <main className="mvp-body mvp-stage">
+      <main className="mvp-body mvp-onboard-body mvp-onboard-form">
         <h1 className="mvp-h1">What do you want to remember about {relative.name}?</h1>
-        <label className="mvp-field">
-          <span className="mvp-label">Prompt / Question <span className="mvp-optional">(optional)</span></span>
-          <input className="mvp-input" value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="e.g. What family tradition do you remember?" />
-        </label>
-        <label className="mvp-field">
-          <span className="mvp-label">Title <span className="mvp-optional">(optional)</span></span>
-          <input className="mvp-input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Sunday Bread" />
-        </label>
-        <label className="mvp-field">
-          <span className="mvp-label">Their story</span>
-          <textarea className="mvp-textarea story" value={text} onChange={(event) => { setText(event.target.value); setError('') }} />
+        <p className="mvp-lede mvp-onboard-form-lede">
+          Even a few sentences is enough. You can always add more later.
+        </p>
+        <section className="mvp-prompt-card mvp-onboard-prompt">
+          <p className="mvp-quote">"{prompt}"</p>
+          <button
+            className="mvp-btn mvp-btn-ghost"
+            type="button"
+            onClick={() => setPromptIndex((value) => value + 1)}
+          >
+            Swap
+          </button>
+        </section>
+        <div className="mvp-field">
+          <div className="mvp-story-field-head">
+            <span className="mvp-label">
+              Their story <span className="mvp-required">(required)</span>
+            </span>
+            <DictateControl
+              onTranscript={(spoken) => {
+                setText((current) => {
+                  const glue = current.trim() ? (current.endsWith('\n') ? '' : ' ') : ''
+                  return `${current}${glue}${spoken}`
+                })
+                setError('')
+              }}
+            />
+          </div>
+          <textarea
+            className={`mvp-textarea mvp-onboard-story${error ? ' mvp-input-error' : ''}`}
+            value={text}
+            onChange={(event) => { setText(event.target.value); setError('') }}
+            placeholder={`Write what you remember about ${relative.name}...`}
+          />
           {error && <p className="mvp-error">{error}</p>}
-        </label>
-        <button className="mvp-btn mvp-btn-primary mvp-btn-block" onClick={() => void save()} disabled={busy}>
+        </div>
+      </main>
+      <footer className="mvp-onboard-footer">
+        <button
+          className="mvp-btn mvp-btn-primary mvp-btn-block mvp-btn-lg"
+          onClick={() => void save()}
+          disabled={busy || !canSave}
+        >
           {busy ? 'Saving…' : 'Save story'}
         </button>
         <div className="mvp-skip">
-          <button className="mvp-switch" type="button" onClick={onSkip}>
-            Skip this story
+          <button className="mvp-switch" type="button" onClick={() => requestLeave(onSkip)}>
+            Skip for now
           </button>
         </div>
-      </main>
-    </>
+      </footer>
+      <LeaveConfirm open={confirmingLeave} onStay={keepEditing} onDiscard={discardDraft} />
+    </div>
   )
 }
 
@@ -931,36 +1420,27 @@ function HomeScreen({
 }) {
   return (
     <>
-      <header className="mvp-top mvp-top-brand">
-        <BrandLogo />
-      </header>
-      <main className="mvp-body mvp-home">
+      <main className="mvp-body mvp-home mvp-tab-screen">
         <section className="mvp-prompt-card">
-          <p className="mvp-quote">“{prompt}”</p>
+          <p className="mvp-quote">&ldquo;{prompt}&rdquo;</p>
           <div className="mvp-prompt-actions">
             <button className="mvp-btn mvp-btn-ghost" type="button" onClick={onSwap}>Swap</button>
-            <button className="mvp-btn mvp-btn-primary" type="button" onClick={onWrite}>Answer question</button>
-            <button className="mvp-btn mvp-btn-secondary mvp-btn-block" type="button" onClick={onFreeWrite}>Skip the question</button>
+            <button className="mvp-btn mvp-btn-primary" type="button" onClick={onWrite}>Answer</button>
+            <button className="mvp-btn mvp-btn-secondary mvp-btn-block" type="button" onClick={onFreeWrite}>Write without a prompt</button>
           </div>
         </section>
         <section className="mvp-feed">
           {stories.length > 0 && <h2 className="mvp-section-label">Recent entries</h2>}
           {stories.length === 0 && (
             <EmptyState
+              variant="soft"
               illustration={journalIllustrationUrl}
-              title="No stories yet"
-              body="Stories you save will show up here."
+              body="Your stories will live here."
             />
           )}
           {stories.map((item) => {
             const person = relatives.find((relative) => relative.id === item.relativeId)
-            const hasPrompt = Boolean(item.prompt?.trim())
-            const hasTitle = Boolean(item.title?.trim())
-            const kickerText = hasPrompt
-              ? `“${item.prompt.trim()}”`
-              : hasTitle
-              ? `“${item.title.trim()}”`
-              : null
+            const headline = item.title.trim() || item.prompt.trim()
 
             return (
               <button key={item.id} className="mvp-entry" onClick={() => onOpenStory(item.id)}>
@@ -968,7 +1448,7 @@ function HomeScreen({
                   <span className="mvp-entry-name">{person?.name ?? 'Someone'}</span>
                   <span className="mvp-entry-date">{formatDate(item.createdAt)}</span>
                 </div>
-                {kickerText && <p className="mvp-entry-kicker">{kickerText}</p>}
+                {headline && <p className="mvp-entry-kicker">“{headline}”</p>}
                 <p className="mvp-entry-snippet">{snippet(item.text)}</p>
               </button>
             )
@@ -979,36 +1459,133 @@ function HomeScreen({
   )
 }
 
+function RelativeFormScreen({
+  relative,
+  onBack,
+  onSaved,
+}: {
+  relative?: Relative
+  onBack: () => void
+  onSaved: (relativeId: string) => void | Promise<void>
+}) {
+  const isEditing = Boolean(relative)
+  const [name, setName] = useState(relative?.name ?? '')
+  const [relationship, setRelationship] = useState(relative?.relationship ?? '')
+  const [nameError, setNameError] = useState('')
+  const [relationshipError, setRelationshipError] = useState('')
+  const [saveError, setSaveError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const canSave = Boolean(name.trim() && relationship.trim())
+
+  async function save() {
+    let hasError = false
+    if (!name.trim()) {
+      setNameError('Add their name before saving.')
+      hasError = true
+    }
+    if (!relationship.trim()) {
+      setRelationshipError('Add their relationship to you before saving.')
+      hasError = true
+    }
+    if (hasError) return
+
+    setBusy(true)
+    setSaveError('')
+    try {
+      const saved = await store.saveRelative({
+        id: relative?.id,
+        name: name.trim(),
+        relationship: relationship.trim(),
+      })
+      await onSaved(saved.id)
+    } catch (error) {
+      setSaveError(messageFromError(error))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <>
+      <header className="mvp-top mvp-top-form">
+        <BackControl onClick={onBack} label={isEditing && relative ? personLabel(relative) : 'People'} />
+      </header>
+      <main className="mvp-body mvp-page mvp-tab-screen">
+        <h1 className="mvp-h1">{isEditing ? 'Edit' : 'Add someone'}</h1>
+        <p className="mvp-lede mvp-page-form-lede">
+          {isEditing ? 'Update their name or relationship.' : 'Who would you like to remember?'}
+        </p>
+        <label className="mvp-field">
+          <span className="mvp-label">
+            Their name <span className="mvp-required">(required)</span>
+          </span>
+          <input
+            className="mvp-input"
+            value={name}
+            onChange={(event) => { setName(event.target.value); setNameError('') }}
+            placeholder="Eleanor"
+            autoComplete="name"
+            autoFocus
+            enterKeyHint="next"
+          />
+          {nameError && <p className="mvp-error">{nameError}</p>}
+        </label>
+        <RelationshipField
+          value={relationship}
+          onChange={(val) => { setRelationship(val); setRelationshipError('') }}
+          error={relationshipError}
+          required
+        />
+        {saveError && <p className="mvp-error">{saveError}</p>}
+        <button
+          className="mvp-btn mvp-btn-primary mvp-btn-block mvp-btn-lg"
+          type="button"
+          onClick={() => void save()}
+          disabled={busy || !canSave}
+        >
+          {busy ? 'Saving…' : isEditing ? 'Save changes' : 'Save person'}
+        </button>
+      </main>
+    </>
+  )
+}
+
 function PeopleScreen({
   relatives,
   stories,
   onOpen,
-  onAdd,
+  onAddPerson,
 }: {
   relatives: Relative[]
   stories: Story[]
   onOpen: (id: string) => void
-  onAdd: () => void
+  onAddPerson: () => void
 }) {
   return (
     <>
-      <header className="mvp-top mvp-top-brand">
-        <BrandLogo />
-      </header>
-      <main className="mvp-body mvp-page">
+      <main className={`mvp-body mvp-page mvp-tab-screen${relatives.length > 0 ? ' mvp-page-with-add-float' : ''}`}>
         <div className="mvp-page-head mvp-page-head-start">
           <div className="mvp-page-head-copy">
             <h1 className="mvp-h1">People</h1>
             <p className="mvp-lede">The relatives whose stories you are keeping.</p>
           </div>
-          <button className="mvp-btn mvp-btn-secondary" type="button" onClick={onAdd}>Add</button>
+          {relatives.length > 0 && (
+            <button
+              type="button"
+              className="mvp-page-add-btn"
+              onClick={onAddPerson}
+              aria-label="Add someone"
+            >
+              <Plus aria-hidden="true" />
+            </button>
+          )}
         </div>
         {relatives.length === 0 && (
           <EmptyState
             illustration={peopleIllustrationUrl}
             title="Who comes to mind?"
             body="Start with one person whose stories you want to keep."
-            action={{ label: 'Add someone', onClick: onAdd }}
+            action={{ label: 'Add someone', onClick: onAddPerson }}
           />
         )}
         <div className="mvp-card-grid">
@@ -1016,17 +1593,24 @@ function PeopleScreen({
             const count = stories.filter((item) => item.relativeId === person.id).length
             return (
               <button key={person.id} className="mvp-person" onClick={() => onOpen(person.id)}>
-                <div className="mvp-person-top">
+                <div className="mvp-person-copy">
                   <span className="mvp-person-name">{person.name}</span>
-                  <span className="mvp-person-meta">{count === 1 ? '1 story' : `${count} stories`}</span>
+                  {person.relationship && <p className="mvp-person-meta mvp-person-rel">{person.relationship}</p>}
                 </div>
-                {person.relationship && <p className="mvp-person-meta mvp-person-rel">{person.relationship}</p>}
+                <span className="mvp-person-meta">{count === 1 ? '1 story' : `${count} stories`}</span>
               </button>
             )
           })}
         </div>
-
       </main>
+      {relatives.length > 0 && (
+        <div className="mvp-people-add-float">
+          <button type="button" className="mvp-btn mvp-btn-primary mvp-btn-block mvp-btn-lg" onClick={onAddPerson}>
+            <Plus aria-hidden="true" />
+            Add someone
+          </button>
+        </div>
+      )}
     </>
   )
 }
@@ -1037,6 +1621,7 @@ function RelativeScreen({
   onBack,
   onOpenStory,
   onWrite,
+  onEdit,
   onDelete,
 }: {
   relative: Relative
@@ -1044,67 +1629,126 @@ function RelativeScreen({
   onBack: () => void
   onOpenStory: (id: string) => void
   onWrite: () => void
+  onEdit: () => void
   onDelete: () => void | Promise<void>
 }) {
   const [confirming, setConfirming] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const hasStories = stories.length > 0
+  const storyCount = stories.length
+  const removeLabel = storyCount === 1 ? '1 story' : `${storyCount} stories`
+
+  function openRemoveConfirm() {
+    setMenuOpen(false)
+    setConfirming(true)
+  }
+
+  function openEdit() {
+    setMenuOpen(false)
+    onEdit()
+  }
 
   return (
     <>
-      <header className="mvp-top">
+      <header className="mvp-top mvp-top-with-menu">
         <BackControl onClick={onBack} label="People" />
-      </header>
-      <main className="mvp-body mvp-page">
-        <div className="mvp-page-head">
-          <h1 className="mvp-h1">{personLabel(relative)}</h1>
-          <button className="mvp-btn mvp-btn-secondary mvp-page-action-header" type="button" onClick={onWrite}>
-            Write a story
-          </button>
-        </div>
-        {stories.length === 0 && (
-          <EmptyState
-            illustration={journalIllustrationUrl}
-            title={`No stories about ${relative.name} yet`}
-            body="Write the first story you want your family to keep."
-            action={{ label: 'Write a story', onClick: onWrite }}
-          />
-        )}
-        <div className="mvp-card-grid mvp-relative-stories-grid">
-          {stories.map((item) => {
-            const hasTitle = Boolean(item.title?.trim())
-            const hasPrompt = Boolean(item.prompt?.trim())
-            const displayTitle = hasTitle ? item.title.trim() : hasPrompt ? `“${item.prompt.trim()}”` : formatLongDate(item.createdAt)
-
-            return (
-              <button key={item.id} className="mvp-entry mvp-relative-story-card" onClick={() => onOpenStory(item.id)}>
-                <div className="mvp-entry-top">
-                  <span className="mvp-entry-heading">{displayTitle}</span>
-                  <span className="mvp-entry-date">{formatDate(item.createdAt)}</span>
-                </div>
-                <p className="mvp-entry-snippet">{snippet(item.text)}</p>
+        <button
+          type="button"
+          className="mvp-top-more-btn"
+          onClick={() => setMenuOpen((open) => !open)}
+          aria-label="More options"
+          aria-expanded={menuOpen}
+          aria-haspopup="menu"
+        >
+          <MoreHorizontal aria-hidden="true" />
+        </button>
+        {menuOpen && (
+          <>
+            <button
+              type="button"
+              className="mvp-menu-backdrop"
+              aria-label="Close menu"
+              onClick={() => setMenuOpen(false)}
+            />
+            <div className="mvp-top-menu" role="menu">
+              <button type="button" role="menuitem" className="mvp-top-menu-item" onClick={openEdit}>
+                Edit
               </button>
-            )
-          })}
+              <div className="mvp-top-menu-divider" role="separator" />
+              <button
+                type="button"
+                role="menuitem"
+                className="mvp-top-menu-item mvp-top-menu-item-danger"
+                onClick={openRemoveConfirm}
+              >
+                Remove
+              </button>
+            </div>
+          </>
+        )}
+      </header>
+      <main
+        className={[
+          'mvp-body',
+          'mvp-page',
+          'mvp-relative-page',
+          hasStories ? 'mvp-page-with-add-float' : 'mvp-relative-empty',
+        ].join(' ')}
+      >
+        <div className="mvp-page-head">
+          <div className="mvp-page-head-copy">
+            <h1 className="mvp-h1">{personLabel(relative)}</h1>
+          </div>
+          {hasStories && (
+            <button
+              type="button"
+              className="mvp-page-add-btn"
+              onClick={onWrite}
+              aria-label="Write a story"
+            >
+              <PenLine aria-hidden="true" />
+            </button>
+          )}
         </div>
-        <div className="mvp-relative-remove">
-          <button className="mvp-switch" type="button" onClick={() => setConfirming(true)}>
-            Remove this person
-          </button>
-        </div>
+        {!hasStories && (
+          <div className="mvp-relative-empty-state-wrap">
+            <EmptyState
+              variant="soft"
+              illustration={journalIllustrationUrl}
+              title={`No stories about ${relative.name} yet`}
+              body="Write the first story you want your family to keep."
+              action={{ label: 'Write a story', onClick: onWrite }}
+            />
+          </div>
+        )}
+        {hasStories && (
+          <div className="mvp-card-grid mvp-relative-stories-grid">
+              {stories.map((item) => (
+                  <button key={item.id} className="mvp-entry mvp-relative-story-card" onClick={() => onOpenStory(item.id)}>
+                    <div className="mvp-entry-top">
+                      <span className="mvp-entry-heading">{storyDisplayTitle(item, relative)}</span>
+                      <span className="mvp-entry-date">{formatDate(item.createdAt)}</span>
+                    </div>
+                    <p className="mvp-entry-snippet">{snippet(item.text)}</p>
+                  </button>
+              ))}
+          </div>
+        )}
 
         {confirming && (
           <div className="mvp-modal-backdrop" onClick={() => setConfirming(false)}>
             <div className="mvp-modal-card" onClick={(event) => event.stopPropagation()}>
-              <h2 className="mvp-modal-title">Remove {relative.name}?</h2>
+              <h2 className="mvp-modal-title">Remove this person?</h2>
               <p className="mvp-modal-msg">
-                This also removes every story about them. That can&apos;t be undone.
+                This will permanently remove this person and {removeLabel}. That can&apos;t be undone.
               </p>
               <div className="mvp-modal-actions">
                 <button className="mvp-btn mvp-btn-ghost" type="button" onClick={() => setConfirming(false)}>
                   Keep them
                 </button>
                 <button
-                  className="mvp-btn mvp-btn-secondary"
+                  className="mvp-btn mvp-btn-danger"
                   type="button"
                   disabled={isDeleting}
                   onClick={() => {
@@ -1119,21 +1763,38 @@ function RelativeScreen({
                     })()
                   }}
                 >
-                  {isDeleting ? 'Removing…' : 'Remove them'}
+                  {isDeleting ? 'Removing…' : 'Remove person'}
                 </button>
               </div>
             </div>
           </div>
         )}
       </main>
+      {hasStories && (
+        <div className="mvp-people-add-float">
+          <button type="button" className="mvp-btn mvp-btn-primary mvp-btn-block mvp-btn-lg" onClick={onWrite}>
+            <PenLine aria-hidden="true" />
+            Write a story
+          </button>
+        </div>
+      )}
     </>
   )
+}
+
+function storyDisplayTitle(story: Story, relative: Relative) {
+  if (story.title?.trim()) return story.title.trim()
+  if (story.prompt?.trim()) return story.prompt.trim()
+  const words = story.text.trim().split(/\s+/).slice(0, 8).join(' ')
+  if (!words) return relative.name
+  return words.length > 48 ? `${words.slice(0, 48).trim()}…` : words
 }
 
 function StoryScreen({
   relative,
   story,
   backLabel,
+  fromRelative,
   onBack,
   onEdit,
   onDelete,
@@ -1141,74 +1802,83 @@ function StoryScreen({
   relative: Relative
   story: Story
   backLabel: string
+  fromRelative: boolean
   onBack: () => void
   onEdit: () => void
   onDelete: () => void | Promise<void>
 }) {
-  const hasTitle = Boolean(story.title?.trim())
-  const hasPrompt = Boolean(story.prompt?.trim())
+  const displayTitle = storyDisplayTitle(story, relative)
   const [confirming, setConfirming] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  function openDeleteConfirm() {
+    setMenuOpen(false)
+    setConfirming(true)
+  }
+
+  function openEdit() {
+    setMenuOpen(false)
+    onEdit()
+  }
+
   return (
     <>
-      <header className="mvp-top">
+      <header className="mvp-top mvp-top-with-menu">
         <BackControl onClick={onBack} label={backLabel} />
-      </header>
-      <main className="mvp-body reading mvp-read">
-        <div className="mvp-read-illust" aria-hidden="true">
-          <img src={readingIllustrationUrl} alt="" decoding="async" />
-        </div>
-        <div className="mvp-read-head">
-          <div className="mvp-read-info">
-            <h1 className="mvp-read-title">
-              {hasTitle
-                ? story.title.trim()
-                : hasPrompt
-                ? `"${story.prompt.trim()}"`
-                : `A story about ${relative.name}`}
-            </h1>
-            <p className="mvp-read-meta">
-              {personLabel(relative)} · Written {formatDate(story.createdAt)}
-            </p>
-            {hasTitle && hasPrompt && (
-              <p className="mvp-read-prompt">"{story.prompt.trim()}"</p>
-            )}
-          </div>
-          <div className="mvp-read-actions mvp-desktop-actions">
-            <button className="mvp-btn mvp-btn-secondary mvp-read-edit" type="button" onClick={onEdit}>
-              Edit
-            </button>
+        <button
+          type="button"
+          className="mvp-top-more-btn"
+          onClick={() => setMenuOpen((open) => !open)}
+          aria-label="More options"
+          aria-expanded={menuOpen}
+          aria-haspopup="menu"
+        >
+          <MoreHorizontal aria-hidden="true" />
+        </button>
+        {menuOpen && (
+          <>
             <button
-              className="mvp-btn mvp-btn-secondary"
               type="button"
-              onClick={() => setConfirming(true)}
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-        <p className="mvp-read-body">{story.text}</p>
-        
-        <div className="mvp-read-actions mvp-mobile-actions">
-          <button className="mvp-btn mvp-btn-secondary mvp-read-edit" type="button" onClick={onEdit}>
-            Edit
-          </button>
-          <button
-            className="mvp-btn mvp-btn-secondary"
-            type="button"
-            onClick={() => setConfirming(true)}
-          >
-            Delete
-          </button>
-        </div>
-
+              className="mvp-menu-backdrop"
+              aria-label="Close menu"
+              onClick={() => setMenuOpen(false)}
+            />
+            <div className="mvp-top-menu" role="menu">
+              <button type="button" role="menuitem" className="mvp-top-menu-item" onClick={openEdit}>
+                Edit
+              </button>
+              <div className="mvp-top-menu-divider" role="separator" />
+              <button
+                type="button"
+                role="menuitem"
+                className="mvp-top-menu-item mvp-top-menu-item-danger"
+                onClick={openDeleteConfirm}
+              >
+                Delete
+              </button>
+            </div>
+          </>
+        )}
+      </header>
+      <main className="mvp-body mvp-story-read">
+        <article className="mvp-story-read-article">
+          <header className="mvp-story-read-head">
+            <h1 className="mvp-read-title">{displayTitle}</h1>
+            <p className="mvp-read-meta">
+              {fromRelative ? `Written ${formatDate(story.createdAt)}` : `${relative.name} · ${formatDate(story.createdAt)}`}
+            </p>
+          </header>
+          <StoryListenRow text={story.text} />
+          <p className="mvp-read-body">{story.text}</p>
+        </article>
 
         {confirming && (
           <div className="mvp-modal-backdrop" onClick={() => setConfirming(false)}>
             <div className="mvp-modal-card" onClick={(e) => e.stopPropagation()}>
               <h2 className="mvp-modal-title">Delete story</h2>
               <p className="mvp-modal-msg">
-                Are you sure you want to delete this story? This action cannot be undone.
+                This will permanently delete this story. That can&apos;t be undone.
               </p>
               <div className="mvp-modal-actions">
                 <button
@@ -1232,7 +1902,7 @@ function StoryScreen({
                     })()
                   }}
                 >
-                  {isDeleting ? 'Deleting…' : 'Delete'}
+                  {isDeleting ? 'Deleting…' : 'Delete story'}
                 </button>
               </div>
             </div>
@@ -1262,33 +1932,86 @@ function WriteScreen({
   onSaved: (story: Story) => void | Promise<void>
   onRefreshRelatives?: () => void | Promise<unknown>
 }) {
+  const isEditing = Boolean(editing)
+  const presetPerson = relatives.find((person) => person.id === (editing?.relativeId ?? presetRelativeId)) ?? null
+  const showPersonSelector = !presetPerson
+  const draftKey = storyDraftKey('write', {
+    storyId: editing?.id,
+    relativeId: presetRelativeId,
+    prompt,
+  })
+
   const [selectedId, setSelectedId] = useState(
     editing?.relativeId ?? presetRelativeId ?? relatives[0]?.id ?? '',
   )
-  const [addingNew, setAddingNew] = useState(relatives.length === 0 && !editing)
+  const [addingNew, setAddingNew] = useState(relatives.length === 0 && !isEditing)
   const [newName, setNewName] = useState('')
   const [newRelationship, setNewRelationship] = useState('')
-  const [promptValue, setPromptValue] = useState(editing?.prompt ?? prompt ?? '')
-  const [titleValue, setTitleValue] = useState(editing?.title ?? '')
-  const [text, setText] = useState(editing?.text ?? '')
+  const [titleValue, setTitleValue] = useState(
+    editing?.title?.trim() || editing?.prompt?.trim() || prompt.trim() || '',
+  )
+  const [text, setText] = useState(() => loadDraft(draftKey) || (editing?.text ?? ''))
   const [nameError, setNameError] = useState('')
   const [relationshipError, setRelationshipError] = useState('')
-  const [titleError, setTitleError] = useState('')
   const [textError, setTextError] = useState('')
   const [saveError, setSaveError] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [confirmingLeave, setConfirmingLeave] = useState(false)
+  const pendingLeaveAction = useRef<(() => void | Promise<void>) | null>(null)
 
-  async function save() {
-    if (!titleValue.trim()) {
-      setTitleError('Add a title before saving.')
+  const storyPerson = presetPerson ?? relatives.find((person) => person.id === selectedId) ?? null
+  const storyPlaceholder = presetPerson
+    ? 'Start writing…'
+    : storyPerson
+      ? `Write what you remember about ${storyPerson.name}...`
+      : 'Write what you remember...'
+  const initialSelectedId = editing?.relativeId ?? presetRelativeId ?? relatives[0]?.id ?? ''
+  const initialTitle = editing?.title?.trim() || editing?.prompt?.trim() || prompt.trim() || ''
+  const initialText = editing?.text ?? ''
+  const initialAddingNew = relatives.length === 0 && !isEditing
+  const isDirty =
+    selectedId !== initialSelectedId ||
+    addingNew !== initialAddingNew ||
+    newName.trim() !== '' ||
+    newRelationship.trim() !== '' ||
+    titleValue.trim() !== initialTitle.trim() ||
+    text !== initialText
+
+  useBeforeUnloadWhen(isDirty)
+
+  useEffect(() => {
+    saveDraft(draftKey, text)
+  }, [draftKey, text])
+
+  function requestLeave(action: () => void | Promise<void>) {
+    if (!isDirty || isSaving) {
+      void action()
       return
     }
+    pendingLeaveAction.current = action
+    setConfirmingLeave(true)
+  }
+
+  function keepEditing() {
+    pendingLeaveAction.current = null
+    setConfirmingLeave(false)
+  }
+
+  function discardDraft() {
+    clearDraft(draftKey)
+    const nextAction = pendingLeaveAction.current
+    pendingLeaveAction.current = null
+    setConfirmingLeave(false)
+    if (nextAction) void nextAction()
+  }
+
+  async function save() {
     if (!text.trim()) {
       setTextError('Write something you want to remember before saving.')
       return
     }
 
-    let relativeId = selectedId
+    let relativeId = isEditing ? selectedId : (presetPerson?.id ?? selectedId)
     if (addingNew || !relativeId) {
       if (!addingNew) {
         setNameError('Choose who this story is about before saving.')
@@ -1328,9 +2051,10 @@ function WriteScreen({
         id: editing?.id,
         relativeId,
         title: titleValue.trim(),
-        prompt: promptValue.trim(),
+        prompt: '',
         text: text.trim(),
       })
+      clearDraft(draftKey)
       await onSaved(saved)
     } catch (error) {
       setSaveError(messageFromError(error))
@@ -1381,14 +2105,18 @@ function WriteScreen({
   }
 
   return (
-    <>
+    <div className="mvp-write-shell">
       <header className="mvp-top">
-        <BackControl onClick={onCancel} label={backLabel} />
+        <BackControl onClick={() => requestLeave(onCancel)} label={backLabel} />
       </header>
-      <main className="mvp-body mvp-write">
-        <h1 className="mvp-h1 mvp-write-title">{editing ? 'Edit story' : 'Add story'}</h1>
+      <main className="mvp-body mvp-write-body">
+        <h1 className="mvp-h1">{isEditing ? 'Edit story' : 'Add story'}</h1>
+        {!isEditing && !storyPerson && (
+          <p className="mvp-lede mvp-write-lede">Choose who it is about, then write what you remember.</p>
+        )}
+
         <div className="mvp-write-main">
-          {!editing && (
+          {!isEditing && showPersonSelector && (
             <div className="mvp-write-person-selector">
               <span className="mvp-label">Who is this about?</span>
               {!addingNew && (
@@ -1415,7 +2143,6 @@ function WriteScreen({
               )}
               {addingNew && (
                 <div className="mvp-add-person-form">
-                  <h3 className="mvp-add-person-title">Add someone</h3>
                   <div className="mvp-subfield">
                     <label className="mvp-label">Name</label>
                     <input className="mvp-input" value={newName} onChange={(event) => { setNewName(event.target.value); setNameError('') }} />
@@ -1439,46 +2166,119 @@ function WriteScreen({
                     <button
                       type="button"
                       className="mvp-btn mvp-btn-primary mvp-add-person-confirm"
-                        onClick={() => void handleAddPerson()}
+                      onClick={() => void handleAddPerson()}
                     >
                       Add person
                     </button>
                   </div>
                 </div>
               )}
+              {nameError && !addingNew && <p className="mvp-error">{nameError}</p>}
             </div>
           )}
-          <label className="mvp-field">
-            <span className="mvp-label">Title</span>
-            <input
-              className={`mvp-input${titleError ? ' mvp-input-error' : ''}`}
-              value={titleValue}
-              onChange={(event) => { setTitleValue(event.target.value); setTitleError('') }}
-              placeholder="e.g. Sunday Bread"
-            />
-            {titleError && <p className="mvp-error">{titleError}</p>}
-          </label>
-          <label className="mvp-field">
-            <span className="mvp-label">Question <span className="mvp-optional">(optional)</span></span>
+
+          <div className="mvp-field mvp-write-story-field">
+            <div className={`mvp-write-composer${textError ? ' mvp-write-composer-error' : ''}`}>
+              <textarea
+                className="mvp-textarea mvp-write-story-input"
+                value={text}
+                onChange={(event) => { setText(event.target.value); setTextError('') }}
+                placeholder={storyPlaceholder}
+                autoFocus={!isEditing}
+              />
+              <div className="mvp-write-composer-bar">
+                <span className="mvp-write-composer-hint">Prefer to speak?</span>
+                <DictateControl
+                  onTranscript={(spoken) => {
+                    setText((current) => {
+                      const glue = current.trim() ? (current.endsWith('\n') ? '' : ' ') : ''
+                      return `${current}${glue}${spoken}`
+                    })
+                    setTextError('')
+                  }}
+                />
+              </div>
+            </div>
+            {textError && <p className="mvp-error">{textError}</p>}
+          </div>
+
+          <label className="mvp-field mvp-write-title-field">
+            <span className="mvp-label">Title <span className="mvp-optional">(optional)</span></span>
             <input
               className="mvp-input"
-              value={promptValue}
-              onChange={(event) => setPromptValue(event.target.value)}
-              placeholder="e.g. What family tradition do you remember?"
+              value={titleValue}
+              onChange={(event) => setTitleValue(event.target.value)}
+              placeholder="e.g. Sunday Bread"
             />
           </label>
-          <label className="mvp-field">
-            <span className="mvp-label">Their story</span>
-            <textarea className={`mvp-textarea story${textError ? ' mvp-input-error' : ''}`} value={text} onChange={(event) => { setText(event.target.value); setTextError('') }} />
-            {textError && <p className="mvp-error">{textError}</p>}
-          </label>
-          <button className="mvp-btn mvp-btn-primary mvp-btn-block mvp-write-save" onClick={() => void save()} disabled={isSaving}>
-            {isSaving ? 'Saving…' : editing ? 'Save changes' : 'Save story'}
-          </button>
-          {saveError && <p className="mvp-error">{saveError}</p>}
+          {isEditing && (
+            <div className="mvp-write-person-selector">
+              <span className="mvp-label">Who is this about?</span>
+              <select
+                className="mvp-select"
+                value={selectedId}
+                onChange={(event) => {
+                  if (event.target.value === 'new') {
+                    setAddingNew(true)
+                    setNameError('')
+                  } else {
+                    setSelectedId(event.target.value)
+                    setNameError('')
+                  }
+                }}
+              >
+                {relatives.map((person) => (
+                  <option key={person.id} value={person.id}>
+                    {personLabel(person)}
+                  </option>
+                ))}
+                <option value="new">+ Add someone...</option>
+              </select>
+              {addingNew && (
+                <div className="mvp-add-person-form">
+                  <div className="mvp-subfield">
+                    <label className="mvp-label">Name</label>
+                    <input className="mvp-input" value={newName} onChange={(event) => { setNewName(event.target.value); setNameError('') }} />
+                    {nameError && <p className="mvp-error">{nameError}</p>}
+                  </div>
+                  <RelationshipField
+                    value={newRelationship}
+                    onChange={(val) => { setNewRelationship(val); setRelationshipError('') }}
+                    error={relationshipError}
+                  />
+                  <div className="mvp-add-person-actions">
+                    {relatives.length > 0 && (
+                      <button
+                        type="button"
+                        className="mvp-btn mvp-btn-ghost mvp-add-person-cancel"
+                        onClick={handleCancelAdd}
+                      >
+                        Cancel
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="mvp-btn mvp-btn-primary mvp-add-person-confirm"
+                      onClick={() => void handleAddPerson()}
+                    >
+                      Add person
+                    </button>
+                  </div>
+                </div>
+              )}
+              {nameError && !addingNew && <p className="mvp-error">{nameError}</p>}
+            </div>
+          )}
         </div>
       </main>
-    </>
+      <footer className="mvp-write-footer">
+        {saveError && <p className="mvp-error">{saveError}</p>}
+        <button className="mvp-btn mvp-btn-primary mvp-btn-block mvp-btn-lg" type="button" onClick={() => void save()} disabled={isSaving}>
+          {isSaving ? 'Saving…' : isEditing ? 'Save changes' : 'Save story'}
+        </button>
+      </footer>
+      <LeaveConfirm open={confirmingLeave} onStay={keepEditing} onDiscard={discardDraft} />
+    </div>
   )
 }
 
@@ -1506,68 +2306,77 @@ function SettingsScreen({
   }
 
   return (
-    <>
-      <header className="mvp-top mvp-top-brand">
-        <BrandLogo />
-      </header>
-      <main className="mvp-body mvp-settings">
-        <h1 className="mvp-h1">Settings</h1>
-        <div className="mvp-settings-card">
-          <div className="mvp-settings-row">
-            <User aria-hidden="true" />
-            <div>
-              <p className="mvp-settings-kicker">Account</p>
-              <p className="mvp-settings-value">{displayName}</p>
-              {email && <p className="mvp-settings-kicker">{email}</p>}
-            </div>
-          </div>
+    <main className="mvp-body mvp-settings mvp-tab-screen">
+      <div className="mvp-page-head mvp-page-head-start">
+        <div className="mvp-page-head-copy">
+          <h1 className="mvp-h1">Account</h1>
+          <p className="mvp-lede">Your Heritage account details.</p>
         </div>
-        <p className="mvp-lede">Stories stay with this account. This first version is a simple keep, not a permanent family vault.</p>
+      </div>
+      <div className="mvp-settings-account">
+        <p className="mvp-settings-name">{displayName}</p>
+        {email && <p className="mvp-settings-email">{email}</p>}
+        {error && <p className="mvp-error">{error}</p>}
+      </div>
+      <button
+        className="mvp-settings-signout"
+        type="button"
+        onClick={() => void signOut()}
+        disabled={busy}
+      >
+        <LogOut aria-hidden="true" />
+        {busy ? 'Signing out…' : 'Sign out'}
+      </button>
+      <div className="mvp-settings-foot">
         <div className="mvp-settings-illust" aria-hidden="true">
           <img src={settingsIllustrationUrl} alt="" decoding="async" />
         </div>
-        {error && <p className="mvp-error">{error}</p>}
-        <button className="mvp-btn mvp-btn-secondary mvp-btn-block" type="button" onClick={() => void signOut()} disabled={busy}>
-          {busy ? 'Signing out…' : 'Sign out'}
-        </button>
-        <div className="mvp-credits">
-          <h2 className="mvp-credits-title">Credits</h2>
-          <p>
-            <a href="https://storyset.com/work" target="_blank" rel="noreferrer">
-              Illustrations by Storyset
-            </a>
-          </p>
-          <p>
-            <a href="https://storyset.com/people" target="_blank" rel="noreferrer">
-              People illustrations by Storyset
-            </a>
-          </p>
-          <p>
-            <a href="https://storyset.com/nature" target="_blank" rel="noreferrer">
-              Nature illustrations by Storyset
-            </a>
-          </p>
-          <p>
-            <a href="https://storyset.com/online" target="_blank" rel="noreferrer">
-              Online illustrations by Storyset
-            </a>
-          </p>
-        </div>
-      </main>
-    </>
+        <p className="mvp-credits">
+          <a href="https://storyset.com" target="_blank" rel="noreferrer">
+            Illustrations by Storyset
+          </a>
+        </p>
+      </div>
+    </main>
   )
+}
+
+function formatRelationshipLabel(value: string) {
+  return value
+    .split(' ')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
 }
 
 function RelationshipField({
   value,
   onChange,
   error,
+  required = false,
+  showChips = true,
 }: {
   value: string
   onChange: (value: string) => void
   error?: string
+  required?: boolean
+  showChips?: boolean
 }) {
+  const chipSet = useMemo(() => new Set<string>(RELATIONSHIP_CHIPS), [])
+  const normalized = value.trim().toLowerCase()
+  const matchesChip = chipSet.has(normalized)
+  const [otherOpen, setOtherOpen] = useState(() => value.trim() !== '' && !matchesChip)
   const [focused, setFocused] = useState(false)
+  const otherInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (!value.trim()) return
+    if (!chipSet.has(value.trim().toLowerCase())) {
+      setOtherOpen(true)
+    } else {
+      setOtherOpen(false)
+    }
+  }, [value, chipSet])
+
   const matches = useMemo(() => {
     const query = value.trim().toLowerCase()
     if (!query) return []
@@ -1576,19 +2385,65 @@ function RelationshipField({
     ).slice(0, 5)
   }, [value])
 
+  const showInput = !showChips || otherOpen || (value.trim() !== '' && !matchesChip)
+  const otherSelected = otherOpen || (value.trim() !== '' && !matchesChip)
+
+  function selectChip(chip: string) {
+    onChange(chip)
+    setOtherOpen(false)
+  }
+
+  function selectOther() {
+    setOtherOpen(true)
+    if (matchesChip) onChange('')
+    otherInputRef.current?.focus()
+  }
+
   return (
     <div className="mvp-field mvp-field-suggest">
-      <label>
-        <span className="mvp-label">Relationship to you</span>
-        <input
-          className="mvp-input"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setTimeout(() => setFocused(false), 200)}
-          autoComplete="off"
-        />
-      </label>
+      <span className="mvp-label">
+        Relationship to you
+        {required && <span className="mvp-required"> (required)</span>}
+      </span>
+      {showChips && (
+        <div className="mvp-relationship-chips" role="group" aria-label="Relationship options">
+          {RELATIONSHIP_CHIPS.map((chip) => (
+            <button
+              key={chip}
+              type="button"
+              className={`mvp-relationship-chip${matchesChip && normalized === chip ? ' selected' : ''}`}
+              aria-pressed={matchesChip && normalized === chip}
+              onClick={() => selectChip(chip)}
+            >
+              {formatRelationshipLabel(chip)}
+            </button>
+          ))}
+          <button
+            type="button"
+            className={`mvp-relationship-chip${otherSelected ? ' selected' : ''}`}
+            aria-pressed={otherSelected}
+            onClick={selectOther}
+          >
+            Other
+          </button>
+        </div>
+      )}
+      {showInput && (
+        <label className="mvp-relationship-other">
+          <span className="mvp-sr-only">Custom relationship</span>
+          <input
+            ref={otherInputRef}
+            className="mvp-input"
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setTimeout(() => setFocused(false), 200)}
+            placeholder="e.g. mentor, cousin, neighbor"
+            autoComplete="off"
+            enterKeyHint="done"
+          />
+        </label>
+      )}
       {error && <p className="mvp-error">{error}</p>}
       {focused && matches.length > 0 && (
         <div className="mvp-relationship-autocomplete">
@@ -1602,7 +2457,7 @@ function RelationshipField({
                 setFocused(false)
               }}
             >
-              {item}
+              {formatRelationshipLabel(item)}
             </button>
           ))}
         </div>
@@ -1614,36 +2469,46 @@ function RelationshipField({
 function NotFoundScreen({ onHome }: { onHome: () => void }) {
   return (
     <>
-      <header className="mvp-top">
-        <BackControl onClick={onHome} label="Home" />
+      <header className="mvp-top mvp-not-found-top">
+        <BrandLogo />
       </header>
-      <main className="mvp-body">
-        <EmptyState
-          illustration={notFoundIllustrationUrl}
-          title="These memories aren't here yet"
-          body="Head home — your people and stories are there."
-          action={{ label: 'Go home', onClick: onHome }}
-        />
+      <main className="mvp-body mvp-not-found-body">
+        <div className="mvp-not-found-illust" aria-hidden="true">
+          <img src={notFoundIllustrationUrl} alt="" decoding="async" />
+        </div>
+        <h1 className="mvp-h1">This page isn&apos;t here</h1>
+        <p className="mvp-lede mvp-not-found-lede">
+          The person or story you were looking for may have moved.
+        </p>
+        <button
+          type="button"
+          className="mvp-btn mvp-btn-primary mvp-btn-lg mvp-not-found-cta"
+          onClick={onHome}
+        >
+          Go home
+        </button>
       </main>
     </>
   )
 }
 
 function EmptyState({
+  variant = 'default',
   icon: Icon,
   illustration,
   title,
   body,
   action,
 }: {
+  variant?: 'default' | 'soft'
   icon?: LucideIcon
   illustration?: string
-  title: string
+  title?: string
   body: string
   action?: { label: string; onClick: () => void }
 }) {
   return (
-    <div className="mvp-empty-state">
+    <div className={`mvp-empty-state${variant === 'soft' ? ' mvp-empty-state-soft' : ''}`}>
       {illustration && (
         <div className="mvp-empty-state-illust" aria-hidden="true">
           <img src={illustration} alt="" decoding="async" />
@@ -1654,7 +2519,7 @@ function EmptyState({
           <Icon />
         </div>
       )}
-      <h2 className="mvp-empty-state-title">{title}</h2>
+      {title && <h2 className="mvp-empty-state-title">{title}</h2>}
       <p className="mvp-empty-state-body">{body}</p>
       {action && (
         <button type="button" className="mvp-btn mvp-btn-primary" onClick={action.onClick}>
