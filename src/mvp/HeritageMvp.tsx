@@ -715,15 +715,19 @@ function DesktopNav({ tab, onTab }: { tab: Tab; onTab: (tab: Tab) => void }) {
 
 function TabBar({ tab, onTab }: { tab: Tab; onTab: (tab: Tab) => void }) {
   return (
-    <nav className="mvp-tabs" aria-label="Main">
+    <nav className="mvp-tabs" aria-label="Main navigation">
+      <div className="mvp-tabs-glass-backdrop" />
       <button
         type="button"
         className={`mvp-tab${tab === 'home' ? ' active' : ''}`}
         onClick={() => onTab('home')}
         aria-current={tab === 'home' ? 'page' : undefined}
       >
-        <Home aria-hidden="true" strokeWidth={tab === 'home' ? 2.25 : 1.75} />
-        Home
+        {tab === 'home' && <span className="mvp-tab-pill" />}
+        <span className="mvp-tab-icon-wrap">
+          <Home aria-hidden="true" strokeWidth={tab === 'home' ? 2.25 : 1.75} />
+        </span>
+        <span className="mvp-tab-label">Home</span>
       </button>
       <button
         type="button"
@@ -731,8 +735,11 @@ function TabBar({ tab, onTab }: { tab: Tab; onTab: (tab: Tab) => void }) {
         onClick={() => onTab('people')}
         aria-current={tab === 'people' ? 'page' : undefined}
       >
-        <Users aria-hidden="true" strokeWidth={tab === 'people' ? 2.25 : 1.75} />
-        People
+        {tab === 'people' && <span className="mvp-tab-pill" />}
+        <span className="mvp-tab-icon-wrap">
+          <Users aria-hidden="true" strokeWidth={tab === 'people' ? 2.25 : 1.75} />
+        </span>
+        <span className="mvp-tab-label">People</span>
       </button>
       <button
         type="button"
@@ -740,8 +747,11 @@ function TabBar({ tab, onTab }: { tab: Tab; onTab: (tab: Tab) => void }) {
         onClick={() => onTab('settings')}
         aria-current={tab === 'settings' ? 'page' : undefined}
       >
-        <Settings aria-hidden="true" strokeWidth={tab === 'settings' ? 2.25 : 1.75} />
-        Settings
+        {tab === 'settings' && <span className="mvp-tab-pill" />}
+        <span className="mvp-tab-icon-wrap">
+          <Settings aria-hidden="true" strokeWidth={tab === 'settings' ? 2.25 : 1.75} />
+        </span>
+        <span className="mvp-tab-label">Settings</span>
       </button>
     </nav>
   )
