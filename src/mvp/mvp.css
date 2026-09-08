@@ -639,7 +639,7 @@ a:focus-visible {
    ========================================================================== */
 
 /* ==========================================================================
-   Apple iOS Liquid Glass Floating Tab Bar System (Exact Match to Ex 4 & 5)
+   Mobbin Authentic Liquid Glass Floating Tab Bar System
    ========================================================================== */
 
 .mvp-tabs {
@@ -654,16 +654,17 @@ a:focus-visible {
   grid-template-columns: repeat(3, 1fr);
   min-height: 64px;
   padding: 5px;
-  background: rgba(255, 255, 255, 0.48);
-  -webkit-backdrop-filter: blur(30px) saturate(190%) contrast(105%);
-  backdrop-filter: blur(30px) saturate(190%) contrast(105%);
+  background: rgba(255, 255, 255, 0.42);
+  -webkit-backdrop-filter: blur(28px) saturate(190%) contrast(105%);
+  backdrop-filter: blur(28px) saturate(190%) contrast(105%);
   border-radius: 36px;
-  border: 1.5px solid rgba(255, 255, 255, 0.82);
+  border: 1.25px solid rgba(255, 255, 255, 0.85);
   box-shadow: 
-    0 20px 40px -8px rgba(15, 23, 42, 0.22),
-    0 6px 16px -2px rgba(15, 23, 42, 0.1),
+    0 24px 48px -12px rgba(0, 0, 0, 0.08),
+    0 8px 20px -6px rgba(0, 0, 0, 0.04),
+    0 2px 6px rgba(0, 0, 0, 0.02),
     inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -1px 2px 0 rgba(255, 255, 255, 0.5);
+    inset 0 -1px 1.5px 0 rgba(255, 255, 255, 0.5);
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   overflow: hidden;
 }
@@ -674,7 +675,7 @@ a:focus-visible {
   inset: 0;
   border-radius: 36px;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.25) 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 55%, rgba(255, 255, 255, 0.2) 100%);
   opacity: 0.95;
 }
 
@@ -690,17 +691,18 @@ a:focus-visible {
   transition: transform 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.22);
 }
 
-/* Liquid Glass Inner Lens Capsule (Matches Ex 4 & 5) */
+/* Liquid Glass Inner Lens Capsule (Mobbin Weightless Lens) */
 .mvp-tab-liquid-lens {
   width: 100%;
   height: 100%;
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.58);
   border: 1px solid rgba(255, 255, 255, 0.95);
   box-shadow: 
-    0 4px 14px -2px rgba(15, 23, 42, 0.14),
+    0 4px 12px -2px rgba(0, 0, 0, 0.06),
+    0 1px 3px rgba(0, 0, 0, 0.02),
     inset 0 1.5px 1px #ffffff,
-    inset 0 -1px 1px rgba(255, 255, 255, 0.6);
+    inset 0 -1px 1px rgba(255, 255, 255, 0.7);
 }
 
 .mvp-tab {
