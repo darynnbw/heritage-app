@@ -649,7 +649,7 @@ a:focus-visible {
   transform: translateX(-50%);
   width: calc(100% - 28px);
   max-width: 420px;
-  bottom: max(6px, calc(4px + env(safe-area-inset-bottom)));
+  bottom: max(6px, calc(-8px + env(safe-area-inset-bottom)));
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   min-height: 64px;
