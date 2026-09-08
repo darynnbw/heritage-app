@@ -57,6 +57,28 @@ export function locationFromPath(pathname: string, session: string | null, searc
 
   if (path === '/login') return authLocation('login', redirectPath)
   if (path === '/signup') return authLocation('signup', redirectPath)
+  if (path === '/forgot-password') {
+    return {
+      screen: 'forgot-password',
+      tab: 'home',
+      relativeId: null,
+      storyId: null,
+      writePrompt: null,
+      editingStoryId: null,
+      redirectPath: null,
+    }
+  }
+  if (path === '/reset-password') {
+    return {
+      screen: 'reset-password',
+      tab: 'home',
+      relativeId: null,
+      storyId: null,
+      writePrompt: null,
+      editingStoryId: null,
+      redirectPath: null,
+    }
+  }
   if (path === '/not-found') return missing
 
   if (path === '/people') {
@@ -128,6 +150,9 @@ export function pathForLocation(location: AppLocation) {
     return query ? `/${location.screen}?${query}` : `/${location.screen}`
   }
 
+  if (location.screen === 'forgot-password') return '/forgot-password'
+  if (location.screen === 'reset-password') return '/reset-password'
+
   if (location.screen === 'write') {
     if (location.editingStoryId) return `/stories/${location.editingStoryId}/edit`
     const params = new URLSearchParams()
@@ -152,6 +177,8 @@ export function pathFor(screen: Screen, relativeId?: string | null, storyId?: st
   if (screen === 'not-found') return '/not-found'
   if (screen === 'login') return '/login'
   if (screen === 'signup') return '/signup'
+  if (screen === 'forgot-password') return '/forgot-password'
+  if (screen === 'reset-password') return '/reset-password'
   if (screen === 'home') return '/home'
   if (screen === 'people') return '/people'
   if (screen === 'add-relative') return '/people/new'

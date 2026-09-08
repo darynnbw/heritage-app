@@ -699,6 +699,41 @@ a:focus-visible {
   font-weight: 600;
 }
 
+.mvp-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.mvp-label-row .mvp-label {
+  margin: 0;
+}
+
+.mvp-field-link {
+  align-self: flex-start;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.mvp-field-link:hover {
+  color: var(--accent-hover);
+}
+
+.mvp-field-link:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+  border-radius: var(--radius);
+}
+
 .mvp-optional {
   font-weight: 500;
   color: var(--quiet);
@@ -1587,7 +1622,7 @@ a:focus-visible {
 /* Text + CTA strip — fills the rest */
 .auth-welcome-body {
   flex: 0 0 auto;
-  padding: 28px 24px 24px;
+  padding: var(--space-8) var(--space-6) var(--space-6);
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -1595,11 +1630,14 @@ a:focus-visible {
 }
 
 .auth-welcome-body .mvp-brand {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-2);
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--soft);
 }
 
 .auth-welcome-title {
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-3);
   font-family: var(--font-serif);
   font-size: var(--text-3xl);
   font-weight: 700;
@@ -1609,7 +1647,7 @@ a:focus-visible {
 }
 
 .auth-welcome-subtitle {
-  margin: 0 0 24px;
+  margin: 0 0 var(--space-8);
   font-size: var(--text-base);
   line-height: 1.5;
   color: var(--quiet);
@@ -1654,7 +1692,7 @@ a:focus-visible {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  margin: clamp(var(--space-10), 12vh, var(--space-16)) 0 var(--space-8);
+  margin: clamp(var(--space-10), 12vh, var(--space-16)) 0 var(--space-10);
 }
 
 .auth-title {
@@ -1700,11 +1738,14 @@ a:focus-visible {
 
 .auth-form .mvp-field {
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
 .auth-switch {
-  margin-top: auto;
-  padding-top: var(--space-8);
+  margin-top: var(--space-5);
+  padding-top: 0;
   border: 0;
   background: transparent;
   font-size: var(--text-sm);
@@ -1774,23 +1815,29 @@ a:focus-visible {
   font-weight: 600;
 }
 
-/* ─── Desktop: welcome side-by-side, auth as narrow centred form ─── */
+/* Desktop visual panel — hidden on mobile; shown in split from 900px */
+.auth-desktop-panel {
+  display: none;
+}
+
+/* ─── Desktop: welcome side-by-side, auth as page form (no floating card) ─── */
 @media (min-width: 600px) {
   .auth-screen {
-    background: var(--wash);
+    background: var(--paper);
     justify-content: center;
-    padding: 40px 20px;
+    padding: var(--space-10) var(--space-8);
   }
 
   .auth-card {
     flex: none;
     width: 100%;
-    max-width: 440px;
+    max-width: 26rem;
     margin: 0 auto;
-    padding: 40px 36px 44px;
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--line);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.07);
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
     justify-content: flex-start;
     min-height: auto;
   }
@@ -1805,9 +1852,51 @@ a:focus-visible {
   }
 }
 
+/* Match welcome: form left, illustration right */
 @media (min-width: 900px) {
+  .auth-screen {
+    flex-direction: row-reverse;
+    align-items: stretch;
+    padding: 0;
+    min-height: 100svh;
+  }
+
+  .auth-desktop-panel {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    min-height: 100svh;
+    padding: var(--space-10);
+    background: var(--wash);
+  }
+
+  .auth-desktop-panel .auth-hero-illustration {
+    width: min(100%, 36rem);
+  }
+
+  .auth-desktop-panel .auth-desktop-img {
+    width: 100%;
+    height: auto;
+    max-height: min(72svh, 34rem);
+    object-fit: contain;
+    display: block;
+  }
+
+  .auth-card {
+    width: 26rem;
+    max-width: none;
+    flex-shrink: 0;
+    margin: 0;
+    padding: var(--space-10) var(--space-10);
+    border-right: 1px solid var(--line);
+    background: var(--paper);
+    justify-content: center;
+    min-height: 100svh;
+  }
+
   .auth-welcome {
-    flex-direction: row;
+    flex-direction: row-reverse;
     min-height: 100svh;
     padding-bottom: 0;
   }
@@ -1828,7 +1917,7 @@ a:focus-visible {
     flex-shrink: 0;
     justify-content: center;
     padding: 48px 52px;
-    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
   }
 
   .auth-welcome-title {

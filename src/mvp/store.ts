@@ -186,6 +186,26 @@ export const store = {
     throwIf(error)
   },
 
+  async requestPasswordReset(email: string): Promise<AuthResult> {
+    const address = email.trim()
+    if (!address) return { ok: false, error: 'Add your email to reset your password.' }
+    if (!address.includes('@')) return { ok: false, error: 'Enter a valid email address.' }
+
+    const redirectTo = `${window.location.origin}/reset-password`
+    const { error } = await supabase.auth.resetPasswordForEmail(address, { redirectTo })
+    if (error) return { ok: false, error: mapAuthMessage(error.message) }
+    return { ok: true, needsConfirmation: true }
+  },
+
+  async updatePassword(password: string): Promise<AuthResult> {
+    if (!password) return { ok: false, error: 'Add a new password.' }
+    if (password.length < 6) return { ok: false, error: 'Use at least 6 characters for your password.' }
+
+    const { error } = await supabase.auth.updateUser({ password })
+    if (error) return { ok: false, error: mapAuthMessage(error.message) }
+    return { ok: true, needsConfirmation: false }
+  },
+
   async signOut() {
     const { error } = await supabase.auth.signOut()
     throwIf(error)

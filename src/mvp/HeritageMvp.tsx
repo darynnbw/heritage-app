@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import {
   ChevronLeft,
   Eye,
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import welcomeHeroUrl from '../assets/illustration-welcome.svg'
+import authFamilyUrl from '../assets/illustration-auth-family.svg'
 import readingIllustrationUrl from '../assets/illustration-reading.svg'
 import journalIllustrationUrl from '../assets/illustration-journal.svg'
 import peopleIllustrationUrl from '../assets/illustration-people.svg'
@@ -138,6 +139,7 @@ export function HeritageMvp() {
   const [authRedirectPath, setAuthRedirectPath] = useState<string | null>(null)
   const [authEmailDraft, setAuthEmailDraft] = useState('')
   const [authNotice, setAuthNotice] = useState('')
+  const [passwordRecovery, setPasswordRecovery] = useState(false)
   const appliedBootRoute = useRef(false)
 
   const userId = session?.id ?? null
@@ -148,7 +150,7 @@ export function HeritageMvp() {
     null
   const prompt = HOME_PROMPTS[promptIndex % HOME_PROMPTS.length]
   const showMobileTabs = screen === 'home' || screen === 'people' || screen === 'relative' || screen === 'settings'
-  const showDesktopNav = Boolean(userId) && !['welcome', 'login', 'signup', 'onboarding-intro', 'onboarding-name', 'onboarding-relative', 'onboarding-story', 'add-relative', 'edit-relative', 'write', 'not-found'].includes(screen)
+  const showDesktopNav = Boolean(userId) && !['welcome', 'login', 'signup', 'forgot-password', 'reset-password', 'onboarding-intro', 'onboarding-name', 'onboarding-relative', 'onboarding-story', 'add-relative', 'edit-relative', 'write', 'not-found'].includes(screen)
 
   function applyLibrary(library: { user: SessionUser; relatives: Relative[]; stories: Story[] }) {
     setSession(library.user)
@@ -209,6 +211,14 @@ export function HeritageMvp() {
 
     const { data } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (event === 'TOKEN_REFRESHED') return
+      if (event === 'PASSWORD_RECOVERY') {
+        receivedAuthEvent = true
+        setPasswordRecovery(true)
+        setScreen('reset-password')
+        replacePath('/reset-password')
+        void hydrate(nextSession?.user.id ?? null)
+        return
+      }
       receivedAuthEvent = true
       void hydrate(nextSession?.user.id ?? null)
     })
@@ -228,6 +238,17 @@ export function HeritageMvp() {
     if (!ready || appliedBootRoute.current) return
     appliedBootRoute.current = true
     const loc = locationFromPath(window.location.pathname, session?.id ?? null, window.location.search)
+    if (loc.screen === 'reset-password' || passwordRecovery) {
+      setPasswordRecovery(true)
+      setScreen('reset-password')
+      replacePath('/reset-password')
+      return
+    }
+    if (loc.screen === 'forgot-password') {
+      setScreen('forgot-password')
+      replacePath('/forgot-password')
+      return
+    }
     if (session && (loc.screen === 'welcome' || loc.screen === 'login' || loc.screen === 'signup')) {
       if (relatives.length === 0) {
         setScreen('onboarding-intro')
@@ -240,7 +261,7 @@ export function HeritageMvp() {
       return
     }
     applyResolvedLocation(loc, stories)
-  }, [ready, session, relatives, stories])
+  }, [ready, session, relatives, stories, passwordRecovery])
 
   useEffect(() => {
     function onPop() {
@@ -329,7 +350,7 @@ export function HeritageMvp() {
     const redirectLocation = authRedirectPath
       ? locationFromPath(authRedirectPath, library.user.id)
       : null
-    if (redirectLocation && redirectLocation.screen !== 'welcome' && redirectLocation.screen !== 'login' && redirectLocation.screen !== 'signup' && redirectLocation.screen !== 'not-found') {
+    if (redirectLocation && redirectLocation.screen !== 'welcome' && redirectLocation.screen !== 'login' && redirectLocation.screen !== 'signup' && redirectLocation.screen !== 'forgot-password' && redirectLocation.screen !== 'reset-password' && redirectLocation.screen !== 'not-found') {
       applyLocation(redirectLocation, library.stories)
       replacePath(pathForLocation(redirectLocation))
       return
@@ -401,7 +422,12 @@ export function HeritageMvp() {
             redirectPath={authRedirectPath}
             initialEmail={authEmailDraft}
             initialNotice={authNotice}
-            onBack={goHome}
+            onForgotPassword={(email) => {
+              setAuthEmailDraft(email)
+              setAuthNotice('')
+              setScreen('forgot-password')
+              pushPath('/forgot-password')
+            }}
             onSwitch={(options) => {
               setAuthEmailDraft(options?.email ?? '')
               setAuthNotice(options?.notice ?? '')
@@ -420,7 +446,6 @@ export function HeritageMvp() {
             redirectPath={authRedirectPath}
             initialEmail={authEmailDraft}
             initialNotice={authNotice}
-            onBack={goHome}
             onSwitch={(options) => {
               setAuthEmailDraft(options?.email ?? '')
               setAuthNotice(options?.notice ?? '')
@@ -429,6 +454,31 @@ export function HeritageMvp() {
               if (authRedirectPath) params.set('redirect', authRedirectPath)
               const query = params.toString()
               pushPath(query ? `/login?${query}` : '/login')
+            }}
+          />
+        )}
+        {screen === 'forgot-password' && (
+          <ForgotPasswordScreen
+            initialEmail={authEmailDraft}
+            onBack={(email) => {
+              setAuthEmailDraft(email)
+              setAuthNotice('')
+              setScreen('login')
+              pushPath('/login')
+            }}
+          />
+        )}
+        {screen === 'reset-password' && (
+          <ResetPasswordScreen
+            hasSession={Boolean(userId)}
+            onDone={async () => {
+              setPasswordRecovery(false)
+              await afterAuth(false)
+            }}
+            onRequestNewLink={() => {
+              setPasswordRecovery(false)
+              setScreen('forgot-password')
+              pushPath('/forgot-password')
             }}
           />
         )}
@@ -717,7 +767,7 @@ function WelcomeScreen({
         <p className="auth-welcome-subtitle">Capture and keep the stories of the people you love.</p>
         <div className="auth-welcome-actions">
           <button className="mvp-btn mvp-btn-primary mvp-btn-block" onClick={onSignup} id="welcome-signup-btn">
-            Get started
+            Sign up
           </button>
           <button className="mvp-btn mvp-btn-ghost mvp-btn-block" onClick={onLogin} id="welcome-login-btn">
             Log in
@@ -728,19 +778,32 @@ function WelcomeScreen({
   )
 }
 
+function AuthShell({ children }: { children: ReactNode }) {
+  return (
+    <div className="auth-screen">
+      <div className="auth-desktop-panel" aria-hidden="true">
+        <div className="auth-hero-illustration">
+          <img src={authFamilyUrl} alt="" className="auth-desktop-img" decoding="async" />
+        </div>
+      </div>
+      <div className="auth-card">{children}</div>
+    </div>
+  )
+}
+
 function AuthScreen({
   mode,
   onDone,
-  onBack,
   onSwitch,
+  onForgotPassword,
   redirectPath,
   initialEmail,
   initialNotice,
 }: {
   mode: 'login' | 'signup'
   onDone: (isNew: boolean) => void | Promise<void>
-  onBack: () => void
   onSwitch: (options?: { email?: string; notice?: string }) => void
+  onForgotPassword?: (email: string) => void
   redirectPath: string | null
   initialEmail: string
   initialNotice: string
@@ -841,15 +904,13 @@ function AuthScreen({
   }
 
   return (
-    <div className="auth-screen">
-      <div className="auth-card">
-        <BackControl onClick={onBack} label="Welcome" />
+    <AuthShell>
         {mode === 'signup' && confirmationEmail ? (
           <div className="auth-confirm">
             <div className="auth-heading">
               <h1 className="auth-title">Check your email</h1>
               <p className="auth-lede">
-                Open the message we sent to {confirmationEmail} to finish creating your account.
+                Open the message we sent to {confirmationEmail} to finish signing up.
               </p>
               <p className="auth-lede">
                 After you confirm, come back here and log in to keep going.
@@ -882,17 +943,17 @@ function AuthScreen({
           <>
             <div className="auth-heading">
               <h1 className="auth-title">
-                {mode === 'login' ? 'Welcome back' : 'Create account'}
+                {mode === 'login' ? 'Welcome back' : 'Sign up'}
               </h1>
-              {redirectPath && mode === 'login' && (
-                <p className="auth-lede">Log in to open {destinationLabel}.</p>
-              )}
-              {redirectPath && mode === 'signup' && (
-                <p className="auth-lede">Create your account, then we&apos;ll take you to {destinationLabel}.</p>
-              )}
-              {mode === 'signup' && (
-                <p className="auth-lede">Save stories about people you love.</p>
-              )}
+              <p className="auth-lede">
+                {mode === 'login'
+                  ? redirectPath
+                    ? `Log in to open ${destinationLabel}.`
+                    : 'Continue the stories you are keeping.'
+                  : redirectPath
+                    ? `Sign up, then we'll take you to ${destinationLabel}.`
+                    : 'Save stories about people you love.'}
+              </p>
             </div>
             <form onSubmit={(event) => void submit(event)} className="auth-form">
               <div className="mvp-field">
@@ -933,6 +994,15 @@ function AuthScreen({
                 {mode === 'signup' && (
                   <p className="mvp-field-hint">At least 6 characters</p>
                 )}
+                {mode === 'login' && onForgotPassword && (
+                  <button
+                    type="button"
+                    className="mvp-field-link"
+                    onClick={() => onForgotPassword(email.trim())}
+                  >
+                    Forgot password?
+                  </button>
+                )}
               </div>
               {error && <p className="mvp-error">{error}</p>}
               {notice && <p className="mvp-notice">{notice}</p>}
@@ -942,18 +1012,242 @@ function AuthScreen({
                 id={`auth-submit-${mode}`}
                 disabled={busy || !canSubmit}
               >
-                {busy ? (mode === 'login' ? 'Logging in…' : 'Creating account…') : mode === 'login' ? 'Log in' : 'Create account'}
+                {busy ? (mode === 'login' ? 'Logging in…' : 'Signing up…') : mode === 'login' ? 'Log in' : 'Sign up'}
               </button>
             </form>
-            <button className="mvp-switch auth-switch" type="button" onClick={() => onSwitch()}>
+            <button className="mvp-switch auth-switch" type="button" onClick={() => onSwitch({ email: email.trim() })}>
               {mode === 'login'
-                ? <>No account yet? <span className="auth-switch-link">Create account</span></>
+                ? <>No account yet? <span className="auth-switch-link">Sign up</span></>
                 : <>Already have an account? <span className="auth-switch-link">Log in</span></>}
             </button>
           </>
         )}
-      </div>
-    </div>
+    </AuthShell>
+  )
+}
+
+function ForgotPasswordScreen({
+  initialEmail,
+  onBack,
+}: {
+  initialEmail: string
+  onBack: (email: string) => void
+}) {
+  const [email, setEmail] = useState(initialEmail)
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [sentTo, setSentTo] = useState('')
+  const canSubmit = Boolean(email.trim().includes('@'))
+
+  useEffect(() => {
+    setEmail(initialEmail)
+  }, [initialEmail])
+
+  async function submit(event: FormEvent) {
+    event.preventDefault()
+    setError('')
+    setBusy(true)
+    try {
+      const result = await store.requestPasswordReset(email)
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
+      setSentTo(email.trim())
+    } catch (caught) {
+      setError(messageFromError(caught))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function resend() {
+    setError('')
+    setBusy(true)
+    try {
+      const result = await store.requestPasswordReset(sentTo)
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
+    } catch (caught) {
+      setError(messageFromError(caught))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <AuthShell>
+        {sentTo ? (
+          <div className="auth-confirm">
+            <div className="auth-heading">
+              <h1 className="auth-title">Check your email</h1>
+              <p className="auth-lede">
+                If an account exists for {sentTo}, we sent a link to reset your password.
+              </p>
+              <p className="auth-lede">
+                Open the link on this device, then choose a new password.
+              </p>
+            </div>
+            {error && <p className="mvp-error">{error}</p>}
+            <div className="auth-confirm-actions">
+              <button
+                className="mvp-btn mvp-btn-primary mvp-btn-block auth-submit"
+                type="button"
+                onClick={() => onBack(sentTo)}
+                disabled={busy}
+              >
+                Back to log in
+              </button>
+              <button
+                className="mvp-btn mvp-btn-ghost mvp-btn-block"
+                type="button"
+                onClick={() => {
+                  setSentTo('')
+                  setError('')
+                }}
+                disabled={busy}
+              >
+                Use a different email
+              </button>
+            </div>
+            <button className="mvp-switch auth-switch" type="button" onClick={() => void resend()} disabled={busy}>
+              <span className="auth-switch-link">Send again</span>
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="auth-heading">
+              <h1 className="auth-title">Reset password</h1>
+              <p className="auth-lede">Enter your email and we&apos;ll send a reset link.</p>
+            </div>
+            <form onSubmit={(event) => void submit(event)} className="auth-form">
+              <div className="mvp-field">
+                <label className="mvp-label" htmlFor="forgot-email">
+                  Email
+                </label>
+                <input
+                  id="forgot-email"
+                  className="mvp-input"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  autoFocus
+                />
+              </div>
+              {error && <p className="mvp-error">{error}</p>}
+              <button
+                className="mvp-btn mvp-btn-primary mvp-btn-block auth-submit"
+                type="submit"
+                disabled={busy || !canSubmit}
+              >
+                {busy ? 'Sending…' : 'Send reset link'}
+              </button>
+            </form>
+            <button className="mvp-switch auth-switch" type="button" onClick={() => onBack(email.trim())}>
+              Remember it? <span className="auth-switch-link">Log in</span>
+            </button>
+          </>
+        )}
+    </AuthShell>
+  )
+}
+
+function ResetPasswordScreen({
+  hasSession,
+  onDone,
+  onRequestNewLink,
+}: {
+  hasSession: boolean
+  onDone: () => void | Promise<void>
+  onRequestNewLink: () => void
+}) {
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const canSubmit = password.length >= 6
+
+  async function submit(event: FormEvent) {
+    event.preventDefault()
+    setError('')
+    setBusy(true)
+    try {
+      const result = await store.updatePassword(password)
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
+      await onDone()
+    } catch (caught) {
+      setError(messageFromError(caught))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (!hasSession) {
+    return (
+      <AuthShell>
+          <div className="auth-heading">
+            <h1 className="auth-title">Link expired</h1>
+            <p className="auth-lede">
+              That reset link is no longer valid. Request a new one to choose a new password.
+            </p>
+          </div>
+          <button className="mvp-btn mvp-btn-primary mvp-btn-block auth-submit" type="button" onClick={onRequestNewLink}>
+            Request a new link
+          </button>
+      </AuthShell>
+    )
+  }
+
+  return (
+    <AuthShell>
+        <div className="auth-heading">
+          <h1 className="auth-title">Choose a new password</h1>
+          <p className="auth-lede">Then you can keep going with your stories.</p>
+        </div>
+        <form onSubmit={(event) => void submit(event)} className="auth-form">
+          <div className="mvp-field">
+            <label className="mvp-label" htmlFor="reset-password">
+              New password
+            </label>
+            <div className="mvp-input-wrapper">
+              <input
+                id="reset-password"
+                className="mvp-input with-reveal"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+                minLength={6}
+                autoFocus
+              />
+              <button
+                type="button"
+                className="mvp-input-reveal"
+                onClick={() => setShowPassword((open) => !open)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
+              >
+                {showPassword ? <EyeOff aria-hidden /> : <Eye aria-hidden />}
+              </button>
+            </div>
+            <p className="mvp-field-hint">At least 6 characters</p>
+          </div>
+          {error && <p className="mvp-error">{error}</p>}
+          <button
+            className="mvp-btn mvp-btn-primary mvp-btn-block auth-submit"
+            type="submit"
+            disabled={busy || !canSubmit}
+          >
+            {busy ? 'Saving…' : 'Save password'}
+          </button>
+        </form>
+    </AuthShell>
   )
 }
 

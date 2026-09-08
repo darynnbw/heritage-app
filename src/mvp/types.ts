@@ -25,6 +25,8 @@ export type Screen =
   | 'welcome'
   | 'login'
   | 'signup'
+  | 'forgot-password'
+  | 'reset-password'
   | 'onboarding-intro'
   | 'onboarding-name'
   | 'onboarding-relative'
