@@ -638,6 +638,10 @@ a:focus-visible {
    True Apple Liquid Glass Floating Tab Bar System (visionOS / iOS 18)
    ========================================================================== */
 
+/* ==========================================================================
+   Apple iOS Liquid Glass Floating Tab Bar System (Exact Match to Ex 4 & 5)
+   ========================================================================== */
+
 .mvp-tabs {
   position: fixed;
   z-index: 100;
@@ -648,30 +652,30 @@ a:focus-visible {
   bottom: max(14px, calc(12px + env(safe-area-inset-bottom)));
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  min-height: 62px;
+  min-height: 64px;
   padding: 5px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.65) 0%, rgba(248, 250, 252, 0.45) 50%, rgba(255, 255, 255, 0.6) 100%);
-  -webkit-backdrop-filter: blur(32px) saturate(210%) contrast(108%);
-  backdrop-filter: blur(32px) saturate(210%) contrast(108%);
+  background: rgba(255, 255, 255, 0.48);
+  -webkit-backdrop-filter: blur(30px) saturate(190%) contrast(105%);
+  backdrop-filter: blur(30px) saturate(190%) contrast(105%);
   border-radius: 36px;
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  border: 1.5px solid rgba(255, 255, 255, 0.82);
   box-shadow: 
-    0 24px 50px -10px rgba(15, 23, 42, 0.22),
-    0 8px 24px -4px rgba(15, 23, 42, 0.1),
+    0 20px 40px -8px rgba(15, 23, 42, 0.22),
+    0 6px 16px -2px rgba(15, 23, 42, 0.1),
     inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.07);
+    inset 0 -1px 2px 0 rgba(255, 255, 255, 0.5);
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   overflow: hidden;
 }
 
-/* Glass Specular Sheen (Curved Prism Edge Reflection) */
+/* Glass Specular Sheen (Curved Edge Reflection) */
 .mvp-tabs-glass-sheen {
   position: absolute;
   inset: 0;
   border-radius: 36px;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.2) 100%);
-  opacity: 0.9;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.25) 100%);
+  opacity: 0.95;
 }
 
 /* Sliding Liquid Glass Lens Slider Container */
@@ -683,21 +687,20 @@ a:focus-visible {
   width: calc((100% - 10px) / 3);
   pointer-events: none;
   z-index: 1;
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.25);
+  transition: transform 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.22);
 }
 
-/* Liquid Glass Inner Lens Capsule */
+/* Liquid Glass Inner Lens Capsule (Matches Ex 4 & 5) */
 .mvp-tab-liquid-lens {
   width: 100%;
   height: 100%;
-  border-radius: 26px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 253, 250, 0.85) 100%);
-  border: 1px solid rgba(255, 255, 255, 1);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.95);
   box-shadow: 
-    0 6px 18px -2px rgba(15, 118, 110, 0.25),
-    0 2px 8px rgba(0, 0, 0, 0.08),
-    inset 0 1px 1px #ffffff,
-    inset 0 -1px 2px rgba(15, 118, 110, 0.15);
+    0 4px 14px -2px rgba(15, 23, 42, 0.14),
+    inset 0 1.5px 1px #ffffff,
+    inset 0 -1px 1px rgba(255, 255, 255, 0.6);
 }
 
 .mvp-tab {
@@ -710,14 +713,14 @@ a:focus-visible {
   align-items: center;
   justify-content: center;
   gap: 2px;
-  min-height: 52px;
+  min-height: 54px;
   padding: 4px 0;
-  color: var(--quiet);
+  color: rgba(15, 23, 42, 0.65);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: -0.01em;
   cursor: pointer;
-  border-radius: 26px;
+  border-radius: 28px;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.25s ease;
@@ -748,11 +751,11 @@ a:focus-visible {
 .mvp-tab svg {
   width: 22px;
   height: 22px;
-  transition: stroke-width 0.2s ease, filter 0.2s ease;
+  transition: stroke-width 0.2s ease, filter 0.2s ease, stroke 0.2s ease;
 }
 
 .mvp-tab.active svg {
-  filter: drop-shadow(0 2px 6px rgba(15, 118, 110, 0.3));
+  filter: drop-shadow(0 2px 6px rgba(15, 118, 110, 0.25));
 }
 
 .mvp-tab-label {
