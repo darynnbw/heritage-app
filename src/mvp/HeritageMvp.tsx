@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import {
   ChevronLeft,
+  ChevronRight,
   Eye,
   EyeOff,
   Home,
@@ -25,6 +26,7 @@ import { messageFromError, store } from './store'
 import { locationFromPath, pathForLocation, pushPath, replacePath } from './routes'
 import { DictateControl } from './DictateControl'
 import { StoryListenRow } from './StoryListenRow'
+import { triggerHaptic } from './haptics'
 import type { Relative, Screen, SessionUser, Story, Tab } from './types'
 
 function formatDate(iso: string) {
@@ -105,15 +107,24 @@ function LeaveConfirm({
   if (!open) return null
 
   return (
-    <div className="mvp-modal-backdrop" onClick={onStay}>
+    <div className="mvp-modal-backdrop" onClick={() => { triggerHaptic('light'); onStay(); }}>
       <div className="mvp-modal-card" onClick={(event) => event.stopPropagation()}>
+        <div className="mvp-sheet-grabber" />
         <h2 className="mvp-modal-title">{title}</h2>
         <p className="mvp-modal-msg">{body}</p>
         <div className="mvp-modal-actions">
-          <button className="mvp-btn mvp-btn-ghost" type="button" onClick={onStay}>
+          <button
+            className="mvp-btn mvp-btn-ghost"
+            type="button"
+            onClick={() => { triggerHaptic('light'); onStay(); }}
+          >
             Keep editing
           </button>
-          <button className="mvp-btn mvp-btn-danger" type="button" onClick={onDiscard}>
+          <button
+            className="mvp-btn mvp-btn-danger"
+            type="button"
+            onClick={() => { triggerHaptic('warning'); onDiscard(); }}
+          >
             Discard draft
           </button>
         </div>
@@ -272,6 +283,7 @@ export function HeritageMvp() {
   }, [session, stories])
 
   function goTab(next: Tab) {
+    triggerHaptic('selection')
     setTab(next)
     if (next === 'home') {
       setScreen('home')
@@ -1824,27 +1836,31 @@ function RelativeFormScreen({
         <p className="mvp-lede mvp-page-form-lede">
           {isEditing ? 'Update their name or relationship.' : 'Who would you like to remember?'}
         </p>
-        <label className="mvp-field">
-          <span className="mvp-label">
-            Their name <span className="mvp-required">(required)</span>
-          </span>
-          <input
-            className="mvp-input"
-            value={name}
-            onChange={(event) => { setName(event.target.value); setNameError('') }}
-            placeholder="Eleanor"
-            autoComplete="name"
-            autoFocus
-            enterKeyHint="next"
-          />
-          {nameError && <p className="mvp-error">{nameError}</p>}
-        </label>
-        <RelationshipField
-          value={relationship}
-          onChange={(val) => { setRelationship(val); setRelationshipError('') }}
-          error={relationshipError}
-          required
-        />
+        <div className="mvp-grouped-section">
+          <div className="mvp-grouped-card" style={{ padding: 'var(--space-4)', display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+            <label className="mvp-field">
+              <span className="mvp-label">
+                Their name <span className="mvp-required">(required)</span>
+              </span>
+              <input
+                className="mvp-input"
+                value={name}
+                onChange={(event) => { setName(event.target.value); setNameError('') }}
+                placeholder="Eleanor"
+                autoComplete="name"
+                autoFocus
+                enterKeyHint="next"
+              />
+              {nameError && <p className="mvp-error">{nameError}</p>}
+            </label>
+            <RelationshipField
+              value={relationship}
+              onChange={(val) => { setRelationship(val); setRelationshipError('') }}
+              error={relationshipError}
+              required
+            />
+          </div>
+        </div>
         {saveError && <p className="mvp-error">{saveError}</p>}
         <button
           className="mvp-btn mvp-btn-primary mvp-btn-block mvp-btn-lg"
@@ -1906,7 +1922,10 @@ function PeopleScreen({
                   <span className="mvp-person-name">{person.name}</span>
                   {person.relationship && <p className="mvp-person-meta mvp-person-rel">{person.relationship}</p>}
                 </div>
-                <span className="mvp-person-meta">{count === 1 ? '1 story' : `${count} stories`}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <span className="mvp-person-meta">{count === 1 ? '1 story' : `${count} stories`}</span>
+                  <ChevronRight aria-hidden="true" style={{ width: 18, height: 18, color: 'var(--quiet)' }} />
+                </div>
               </button>
             )
           })}
@@ -2618,24 +2637,41 @@ function SettingsScreen({
     <main className="mvp-body mvp-settings mvp-tab-screen">
       <div className="mvp-page-head mvp-page-head-start">
         <div className="mvp-page-head-copy">
-          <h1 className="mvp-h1">Account</h1>
-          <p className="mvp-lede">Your Heritage account details.</p>
+          <h1 className="mvp-h1">Settings</h1>
         </div>
       </div>
-      <div className="mvp-settings-account">
-        <p className="mvp-settings-name">{displayName}</p>
-        {email && <p className="mvp-settings-email">{email}</p>}
-        {error && <p className="mvp-error">{error}</p>}
+
+      <div className="mvp-grouped-section">
+        <h2 className="mvp-grouped-header">Profile & Account</h2>
+        <div className="mvp-grouped-card">
+          <div className="mvp-grouped-row">
+            <span className="mvp-grouped-row-label">Name</span>
+            <span className="mvp-grouped-row-value">{displayName}</span>
+          </div>
+          <div className="mvp-grouped-row">
+            <span className="mvp-grouped-row-label">Email</span>
+            <span className="mvp-grouped-row-value">{email}</span>
+          </div>
+        </div>
       </div>
-      <button
-        className="mvp-settings-signout"
-        type="button"
-        onClick={() => void signOut()}
-        disabled={busy}
-      >
-        <LogOut aria-hidden="true" />
-        {busy ? 'Signing out…' : 'Sign out'}
-      </button>
+
+      <div className="mvp-grouped-section">
+        <div className="mvp-grouped-card">
+          <button
+            type="button"
+            className="mvp-grouped-row mvp-grouped-row-action"
+            onClick={() => void signOut()}
+            disabled={busy}
+          >
+            <span className="mvp-grouped-row-label" style={{ color: 'var(--danger)', fontWeight: 500 }}>
+              <LogOut aria-hidden="true" style={{ width: 18, height: 18 }} />
+              {busy ? 'Signing out…' : 'Sign out'}
+            </span>
+          </button>
+        </div>
+        {error && <p className="mvp-error" style={{ margin: 'var(--space-2) var(--space-4)' }}>{error}</p>}
+      </div>
+
       <div className="mvp-settings-foot">
         <div className="mvp-settings-illust" aria-hidden="true">
           <img src={settingsIllustrationUrl} alt="" decoding="async" />
@@ -2847,8 +2883,8 @@ function BackControl({
   label?: string
 }) {
   return (
-    <button className="mvp-back-btn" type="button" onClick={onClick}>
-      <ChevronLeft aria-hidden="true" strokeWidth={2.5} />
+    <button className="mvp-back-btn" type="button" onClick={() => { triggerHaptic('light'); onClick(); }}>
+      <ChevronLeft aria-hidden="true" strokeWidth={2.0} />
       <span className="mvp-back-label">{label}</span>
     </button>
   )

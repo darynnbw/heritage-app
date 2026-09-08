@@ -6,6 +6,7 @@
   --wash: #f8fafc;
   --fill: #f1f5f9;
   --fill-hover: #e2e8f0;
+  --grouped-bg: #f2f2f7;
 
   /* Text */
   --ink: #0f172a;
@@ -14,7 +15,7 @@
   --on-accent: #ffffff;
 
   /* Borders */
-  --line: #cbd5e1;
+  --line: rgba(60, 60, 67, 0.18);
 
   /* Accent (teal) — keep in sync with illustration SVGs */
   --accent: #0f766e;
@@ -25,11 +26,11 @@
   --danger: #b91c1c;
   --danger-hover: #991b1b;
   --danger-soft: #fde8e8;
-  --scrim: rgba(15, 23, 42, 0.4);
+  --scrim: rgba(0, 0, 0, 0.4);
 
-  /* Typography */
+  /* Typography — San Francisco (iOS HIG) */
   --font-serif: 'Lora', Georgia, 'Times New Roman', serif;
-  --font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font: var(--font-sans);
 
   /* Spacing — 4/8 rhythm */
@@ -73,7 +74,62 @@
   --illust-read: min(15rem, 68%);
 
   --t-fast: 0.15s ease;
-  --shadow-lg: 0 10px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+  --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.15);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #000000;
+    --wash: #1c1c1e;
+    --fill: #2c2c2e;
+    --fill-hover: #3a3a3c;
+    --grouped-bg: #000000;
+
+    --ink: #ffffff;
+    --soft: rgba(235, 235, 245, 0.85);
+    --quiet: rgba(235, 235, 245, 0.6);
+    --on-accent: #ffffff;
+
+    --line: rgba(84, 84, 88, 0.65);
+
+    --accent: #14b8a6;
+    --accent-hover: #2dd4bf;
+    --accent-subtle: rgba(15, 118, 110, 0.25);
+
+    --danger: #ff453a;
+    --danger-hover: #ff6961;
+    --danger-soft: rgba(255, 69, 58, 0.15);
+    --scrim: rgba(0, 0, 0, 0.7);
+  }
+
+  .mvp-top {
+    background: rgba(28, 28, 30, 0.85);
+    border-bottom-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .mvp-tabs {
+    background: rgba(28, 28, 30, 0.85);
+    border-top-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .mvp-segmented-control {
+    background: rgba(118, 118, 128, 0.24);
+  }
+
+  .mvp-segmented-btn.active {
+    background: #636366;
+    color: #ffffff;
+  }
+
+  .mvp-grouped-card {
+    background: #1c1c1e;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .mvp-grouped-row {
+    background: #1c1c1e;
+    border-bottom-color: rgba(255, 255, 255, 0.15);
+  }
 }
 
 *,
@@ -147,11 +203,13 @@ a:focus-visible {
   gap: var(--space-3);
   min-height: var(--touch);
   padding: max(var(--space-3), env(safe-area-inset-top)) var(--space-5) var(--space-2);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 0.5px solid rgba(60, 60, 67, 0.18);
   position: sticky;
   top: 0;
   z-index: 20;
-  background: var(--paper);
+  background: rgba(255, 255, 255, 0.85);
+  -webkit-backdrop-filter: blur(25px) saturate(180%);
+  backdrop-filter: blur(25px) saturate(180%);
 }
 
 .mvp-brand {
@@ -168,20 +226,20 @@ a:focus-visible {
   background: transparent;
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: 2px;
   padding: var(--space-2) var(--space-3) var(--space-2) var(--space-1);
   margin-left: calc(var(--space-1) * -1);
   font-size: var(--text-base);
   font-weight: 500;
-  color: var(--soft);
+  color: var(--accent);
   min-height: var(--touch);
   min-width: var(--touch);
   cursor: pointer;
-  transition: color var(--t-fast);
+  transition: opacity var(--t-fast);
 }
 
-.mvp-back-btn:hover {
-  color: var(--ink);
+.mvp-back-btn:active {
+  opacity: 0.6;
 }
 
 .mvp-back-label {
@@ -189,6 +247,117 @@ a:focus-visible {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Inset Grouped Section & Card Styles (iOS HIG) */
+.mvp-grouped-section {
+  margin-bottom: var(--space-6);
+}
+
+.mvp-grouped-header {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--quiet);
+  margin: 0 var(--space-4) var(--space-2);
+}
+
+.mvp-grouped-footer {
+  font-size: var(--text-xs);
+  color: var(--quiet);
+  margin: var(--space-2) var(--space-4) 0;
+  line-height: 1.4;
+}
+
+.mvp-grouped-card {
+  background: var(--paper);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 1px rgba(0, 0, 0, 0.02);
+  border: 0.5px solid rgba(60, 60, 67, 0.12);
+}
+
+.mvp-grouped-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  min-height: 48px;
+  background: var(--paper);
+  font-size: 17px;
+  color: var(--ink);
+  border-bottom: 0.5px solid rgba(60, 60, 67, 0.12);
+  text-decoration: none;
+  transition: background var(--t-fast);
+}
+
+.mvp-grouped-row:last-child {
+  border-bottom: none;
+}
+
+.mvp-grouped-row-action {
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  font: inherit;
+}
+
+.mvp-grouped-row-action:active {
+  background: var(--fill);
+}
+
+.mvp-grouped-row-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 17px;
+  font-weight: 400;
+}
+
+.mvp-grouped-row-value {
+  font-size: 17px;
+  color: var(--quiet);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mvp-grouped-row-value.accent {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* iOS Segmented Control */
+.mvp-segmented-control {
+  display: flex;
+  background: rgba(118, 118, 128, 0.12);
+  border-radius: 9px;
+  padding: 2px;
+  gap: 2px;
+  width: 100%;
+}
+
+.mvp-segmented-btn {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  padding: 6px var(--space-3);
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 7px;
+  color: var(--soft);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.mvp-segmented-btn.active {
+  background: #ffffff;
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 1px rgba(0, 0, 0, 0.08);
 }
 
 .mvp-body {
@@ -1247,24 +1416,48 @@ a:focus-visible {
 .mvp-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: var(--scrim);
+  background: rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   z-index: 1000;
-  padding: var(--space-5);
+  padding: 0;
+  animation: mvpFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mvpFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .mvp-modal-card {
+  position: relative;
   background: var(--paper);
-  border-radius: var(--radius);
-  padding: var(--space-6);
-  max-width: 25rem;
+  border-radius: 20px 20px 0 0;
+  padding: var(--space-4) var(--space-6) max(var(--space-6), env(safe-area-inset-bottom));
+  max-width: var(--page);
   width: 100%;
-  box-shadow: var(--shadow-lg);
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.18);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  animation: mvpSheetSlide 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes mvpSheetSlide {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.mvp-sheet-grabber {
+  width: 36px;
+  height: 5px;
+  background: rgba(60, 60, 67, 0.3);
+  border-radius: 3px;
+  margin: 0 auto var(--space-1);
+  flex-shrink: 0;
 }
 
 .mvp-modal-title {
