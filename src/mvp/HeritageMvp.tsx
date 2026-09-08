@@ -714,16 +714,23 @@ function DesktopNav({ tab, onTab }: { tab: Tab; onTab: (tab: Tab) => void }) {
 }
 
 function TabBar({ tab, onTab }: { tab: Tab; onTab: (tab: Tab) => void }) {
+  const tabIndex = tab === 'home' ? 0 : tab === 'people' ? 1 : 2
+
   return (
     <nav className="mvp-tabs" aria-label="Main navigation">
-      <div className="mvp-tabs-glass-backdrop" />
+      <div className="mvp-tabs-glass-sheen" />
+      <div
+        className="mvp-tab-liquid-slider"
+        style={{ transform: `translateX(${tabIndex * 100}%)` }}
+      >
+        <div className="mvp-tab-liquid-lens" />
+      </div>
       <button
         type="button"
         className={`mvp-tab${tab === 'home' ? ' active' : ''}`}
         onClick={() => onTab('home')}
         aria-current={tab === 'home' ? 'page' : undefined}
       >
-        {tab === 'home' && <span className="mvp-tab-pill" />}
         <span className="mvp-tab-icon-wrap">
           <Home aria-hidden="true" strokeWidth={tab === 'home' ? 2.25 : 1.75} />
         </span>
@@ -735,7 +742,6 @@ function TabBar({ tab, onTab }: { tab: Tab; onTab: (tab: Tab) => void }) {
         onClick={() => onTab('people')}
         aria-current={tab === 'people' ? 'page' : undefined}
       >
-        {tab === 'people' && <span className="mvp-tab-pill" />}
         <span className="mvp-tab-icon-wrap">
           <Users aria-hidden="true" strokeWidth={tab === 'people' ? 2.25 : 1.75} />
         </span>
@@ -747,7 +753,6 @@ function TabBar({ tab, onTab }: { tab: Tab; onTab: (tab: Tab) => void }) {
         onClick={() => onTab('settings')}
         aria-current={tab === 'settings' ? 'page' : undefined}
       >
-        {tab === 'settings' && <span className="mvp-tab-pill" />}
         <span className="mvp-tab-icon-wrap">
           <Settings aria-hidden="true" strokeWidth={tab === 'settings' ? 2.25 : 1.75} />
         </span>

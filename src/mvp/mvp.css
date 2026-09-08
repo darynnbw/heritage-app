@@ -634,43 +634,75 @@ a:focus-visible {
    Apple iOS Liquid Glass Floating Tab Bar System
    ========================================================================== */
 
+/* ==========================================================================
+   True Apple Liquid Glass Floating Tab Bar System (visionOS / iOS 18)
+   ========================================================================== */
+
 .mvp-tabs {
   position: fixed;
   z-index: 100;
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100% - 24px);
-  max-width: 440px;
-  bottom: max(12px, calc(10px + env(safe-area-inset-bottom)));
+  width: calc(100% - 28px);
+  max-width: 420px;
+  bottom: max(14px, calc(12px + env(safe-area-inset-bottom)));
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  min-height: 60px;
-  padding: 5px 6px;
-  background: rgba(253, 250, 246, 0.74);
-  -webkit-backdrop-filter: blur(28px) saturate(190%) contrast(105%);
-  backdrop-filter: blur(28px) saturate(190%) contrast(105%);
-  border-radius: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.75);
+  min-height: 62px;
+  padding: 5px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.65) 0%, rgba(248, 250, 252, 0.45) 50%, rgba(255, 255, 255, 0.6) 100%);
+  -webkit-backdrop-filter: blur(32px) saturate(210%) contrast(108%);
+  backdrop-filter: blur(32px) saturate(210%) contrast(108%);
+  border-radius: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
   box-shadow: 
-    0 16px 36px -6px rgba(45, 25, 15, 0.16),
-    0 4px 16px -2px rgba(0, 0, 0, 0.05),
-    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.04);
+    0 24px 50px -10px rgba(15, 23, 42, 0.22),
+    0 8px 24px -4px rgba(15, 23, 42, 0.1),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1.5px 2px 0 rgba(0, 0, 0, 0.07);
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
 }
 
-.mvp-tabs-glass-backdrop {
+/* Glass Specular Sheen (Curved Prism Edge Reflection) */
+.mvp-tabs-glass-sheen {
   position: absolute;
   inset: 0;
-  border-radius: 32px;
+  border-radius: 36px;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0) 100%);
-  opacity: 0.8;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.2) 100%);
+  opacity: 0.9;
+}
+
+/* Sliding Liquid Glass Lens Slider Container */
+.mvp-tab-liquid-slider {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 5px;
+  width: calc((100% - 10px) / 3);
+  pointer-events: none;
+  z-index: 1;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.25);
+}
+
+/* Liquid Glass Inner Lens Capsule */
+.mvp-tab-liquid-lens {
+  width: 100%;
+  height: 100%;
+  border-radius: 26px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 253, 250, 0.85) 100%);
+  border: 1px solid rgba(255, 255, 255, 1);
+  box-shadow: 
+    0 6px 18px -2px rgba(15, 118, 110, 0.25),
+    0 2px 8px rgba(0, 0, 0, 0.08),
+    inset 0 1px 1px #ffffff,
+    inset 0 -1px 2px rgba(15, 118, 110, 0.15);
 }
 
 .mvp-tab {
   position: relative;
-  z-index: 1;
+  z-index: 2;
   border: 0;
   background: transparent;
   display: flex;
@@ -678,45 +710,21 @@ a:focus-visible {
   align-items: center;
   justify-content: center;
   gap: 2px;
-  min-height: 48px;
+  min-height: 52px;
   padding: 4px 0;
   color: var(--quiet);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: -0.01em;
   cursor: pointer;
-  border-radius: 24px;
+  border-radius: 26px;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease;
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.25s ease;
 }
 
 .mvp-tab:active {
-  transform: scale(0.92);
-}
-
-.mvp-tab-pill {
-  position: absolute;
-  inset: 2px 4px;
-  z-index: -1;
-  border-radius: 22px;
-  background: rgba(15, 118, 110, 0.09);
-  box-shadow: 
-    inset 0 1px 1px rgba(255, 255, 255, 0.8),
-    0 2px 8px rgba(15, 118, 110, 0.08);
-  border: 1px solid rgba(15, 118, 110, 0.16);
-  animation: mvpPillPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-
-@keyframes mvpPillPop {
-  0% {
-    opacity: 0;
-    transform: scale(0.85);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
+  transform: scale(0.91);
 }
 
 .mvp-tab.active {
@@ -730,11 +738,11 @@ a:focus-visible {
   justify-content: center;
   width: 24px;
   height: 24px;
-  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .mvp-tab.active .mvp-tab-icon-wrap {
-  transform: translateY(-1px) scale(1.08);
+  transform: translateY(-2px) scale(1.12);
 }
 
 .mvp-tab svg {
@@ -744,12 +752,13 @@ a:focus-visible {
 }
 
 .mvp-tab.active svg {
-  filter: drop-shadow(0 2px 4px rgba(15, 118, 110, 0.15));
+  filter: drop-shadow(0 2px 6px rgba(15, 118, 110, 0.3));
 }
 
 .mvp-tab-label {
   font-size: 11px;
   line-height: 1.1;
+  transition: transform 0.2s ease;
 }
 
 .mvp-h1 {
