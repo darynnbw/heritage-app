@@ -1,6 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { Home, Settings, Trash2, User } from 'lucide-react'
-import { HOME_PROMPTS, RELATIONSHIP_SUGGESTIONS } from './prompts'
+import { HOME_PROMPTS } from './prompts'
 import { store } from './store'
 import type { Relative, Screen, Story, Tab } from './types'
 
@@ -20,6 +20,23 @@ function personLabel(person: Relative) {
   if (!person.relationship) return person.name
   const relation = person.relationship.charAt(0).toUpperCase() + person.relationship.slice(1)
   return `${relation} ${person.name}`
+}
+
+function formatBirthDate(iso: string) {
+  if (!iso.trim()) return ''
+  const [y, m, d] = iso.split('-').map(Number)
+  if (!y || !m || !d) return iso
+  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function personMeta(person: Relative) {
+  if (person.dateOfBirth) return `Born ${formatBirthDate(person.dateOfBirth)}`
+  if (person.relationship) return person.relationship
+  return ''
 }
 
 export function HeritageMvp() {
@@ -53,7 +70,9 @@ export function HeritageMvp() {
   const story = stories.find((item) => item.id === storyId) ?? null
   const prompt = HOME_PROMPTS[promptIndex % HOME_PROMPTS.length]
   const showMobileTabs = screen === 'home' || screen === 'people' || screen === 'relative' || screen === 'settings'
-  const showDesktopNav = Boolean(userId) && !['login', 'signup', 'onboarding-intro', 'onboarding-relative', 'onboarding-story'].includes(screen)
+  const showDesktopNav =
+    Boolean(userId) &&
+    !['login', 'signup', 'onboarding-intro', 'onboarding-relative', 'onboarding-story', 'add-relative', 'edit-relative', 'write'].includes(screen)
 
   function goTab(next: Tab) {
     setTab(next)
@@ -66,6 +85,17 @@ export function HeritageMvp() {
     setRelativeId(id)
     setTab('people')
     setScreen('relative')
+  }
+
+  function openAddRelative() {
+    setTab('people')
+    setScreen('add-relative')
+  }
+
+  function openEditRelative(id: string) {
+    setRelativeId(id)
+    setTab('people')
+    setScreen('edit-relative')
   }
 
   function openStory(id: string, from: 'home' | 'relative') {
@@ -142,7 +172,26 @@ export function HeritageMvp() {
             relatives={relatives}
             stories={stories}
             onOpen={openRelative}
-            onAdd={() => startWrite('')}
+            onAddPerson={openAddRelative}
+          />
+        )}
+        {screen === 'add-relative' && userId && (
+          <RelativeFormScreen
+            onBack={() => setScreen('people')}
+            onSaved={(id) => {
+              refresh()
+              openRelative(id)
+            }}
+          />
+        )}
+        {screen === 'edit-relative' && userId && relative && (
+          <RelativeFormScreen
+            relative={relative}
+            onBack={() => setScreen('relative')}
+            onSaved={(id) => {
+              refresh()
+              openRelative(id)
+            }}
           />
         )}
         {screen === 'relative' && userId && relative && (
@@ -155,6 +204,7 @@ export function HeritageMvp() {
             }}
             onOpenStory={(id) => openStory(id, 'relative')}
             onWrite={() => startWrite('', relative.id)}
+            onEdit={() => openEditRelative(relative.id)}
           />
         )}
         {screen === 'story' && relative && story && (
@@ -213,7 +263,7 @@ export function HeritageMvp() {
               setStoryReturn(tab === 'home' ? 'home' : 'relative')
               setScreen('story')
             }}
-            onRefreshRelatives={refresh}
+            onAddRelative={openAddRelative}
           />
         )}
         {screen === 'settings' && userId && (
@@ -356,9 +406,9 @@ function OnboardingRelative({
   onContinue: (relativeId: string) => void
 }) {
   const [name, setName] = useState('')
-  const [relationship, setRelationship] = useState('')
+  const [dateOfBirth, setDateOfBirth] = useState('')
   const [nameError, setNameError] = useState('')
-  const [relationshipError, setRelationshipError] = useState('')
+  const [dobError, setDobError] = useState('')
 
   function continueOnboarding() {
     let hasError = false
@@ -366,13 +416,18 @@ function OnboardingRelative({
       setNameError('Add their name before saving.')
       hasError = true
     }
-    if (!relationship.trim()) {
-      setRelationshipError('Add their relationship to you before saving.')
+    if (!dateOfBirth.trim()) {
+      setDobError('Add their date of birth before saving.')
       hasError = true
     }
     if (hasError) return
 
-    const relative = store.saveRelative({ userId, name: name.trim(), relationship: relationship.trim() })
+    const relative = store.saveRelative({
+      userId,
+      name: name.trim(),
+      relationship: '',
+      dateOfBirth: dateOfBirth.trim(),
+    })
     onContinue(relative.id)
   }
 
@@ -382,17 +437,22 @@ function OnboardingRelative({
         <p className="mvp-brand">Heritage</p>
       </header>
       <main className="mvp-body mvp-stage">
-        <h1 className="mvp-h1">Whose story would you like to preserve today?</h1>
+        <h1 className="mvp-h1">Who would you like to remember?</h1>
         <label className="mvp-field">
           <span className="mvp-label">Their name</span>
           <input className="mvp-input" value={name} onChange={(event) => { setName(event.target.value); setNameError('') }} placeholder="Eleanor" />
           {nameError && <p className="mvp-error">{nameError}</p>}
         </label>
-        <RelationshipField
-          value={relationship}
-          onChange={(val) => { setRelationship(val); setRelationshipError('') }}
-          error={relationshipError}
-        />
+        <label className="mvp-field">
+          <span className="mvp-label">Date of birth</span>
+          <input
+            className="mvp-input"
+            type="date"
+            value={dateOfBirth}
+            onChange={(event) => { setDateOfBirth(event.target.value); setDobError('') }}
+          />
+          {dobError && <p className="mvp-error">{dobError}</p>}
+        </label>
         <button className="mvp-btn mvp-btn-primary mvp-btn-block" onClick={continueOnboarding}>Continue</button>
       </main>
     </>
@@ -515,16 +575,93 @@ function HomeScreen({
   )
 }
 
+function RelativeFormScreen({
+  relative,
+  onBack,
+  onSaved,
+}: {
+  relative?: Relative
+  onBack: () => void
+  onSaved: (relativeId: string) => void
+}) {
+  const isEditing = Boolean(relative)
+  const [name, setName] = useState(relative?.name ?? '')
+  const [dateOfBirth, setDateOfBirth] = useState(relative?.dateOfBirth ?? '')
+  const [nameError, setNameError] = useState('')
+  const [dobError, setDobError] = useState('')
+
+  function save() {
+    let hasError = false
+    if (!name.trim()) {
+      setNameError('Add their name before saving.')
+      hasError = true
+    }
+    if (!dateOfBirth.trim()) {
+      setDobError('Add their date of birth before saving.')
+      hasError = true
+    }
+    if (hasError) return
+    const userId = relative?.userId ?? store.getSession()
+    if (!userId) return
+    const saved = store.saveRelative({
+      id: relative?.id,
+      userId,
+      name: name.trim(),
+      relationship: relative?.relationship ?? '',
+      dateOfBirth: dateOfBirth.trim(),
+    })
+    onSaved(saved.id)
+  }
+
+  return (
+    <>
+      <header className="mvp-top">
+        <button className="mvp-back" type="button" onClick={onBack}>← Back</button>
+      </header>
+      <main className="mvp-body mvp-page">
+        <h1 className="mvp-h1">{isEditing ? 'Edit person' : 'Add someone'}</h1>
+        <p className="mvp-lede">
+          {isEditing ? 'Update their name or date of birth.' : 'Add them to your family. You can write stories about them later.'}
+        </p>
+        <label className="mvp-field">
+          <span className="mvp-label">Their name</span>
+          <input
+            className="mvp-input"
+            value={name}
+            onChange={(event) => { setName(event.target.value); setNameError('') }}
+            placeholder="Eleanor"
+            autoFocus
+          />
+          {nameError && <p className="mvp-error">{nameError}</p>}
+        </label>
+        <label className="mvp-field">
+          <span className="mvp-label">Date of birth</span>
+          <input
+            className="mvp-input"
+            type="date"
+            value={dateOfBirth}
+            onChange={(event) => { setDateOfBirth(event.target.value); setDobError('') }}
+          />
+          {dobError && <p className="mvp-error">{dobError}</p>}
+        </label>
+        <button className="mvp-btn mvp-btn-primary mvp-btn-block mvp-page-action" type="button" onClick={save}>
+          {isEditing ? 'Save changes' : 'Save person'}
+        </button>
+      </main>
+    </>
+  )
+}
+
 function PeopleScreen({
   relatives,
   stories,
   onOpen,
-  onAdd,
+  onAddPerson,
 }: {
   relatives: Relative[]
   stories: Story[]
   onOpen: (id: string) => void
-  onAdd: () => void
+  onAddPerson: () => void
 }) {
   return (
     <>
@@ -548,13 +685,13 @@ function PeopleScreen({
                   <span className="mvp-person-name">{person.name}</span>
                   <span className="mvp-person-meta">{count === 1 ? '1 story' : `${count} stories`}</span>
                 </div>
-                {person.relationship && <p className="mvp-person-meta mvp-person-rel">{person.relationship}</p>}
+                {personMeta(person) && <p className="mvp-person-meta mvp-person-rel">{personMeta(person)}</p>}
               </button>
             )
           })}
         </div>
-        <button className="mvp-btn mvp-btn-secondary mvp-btn-block mvp-page-action" onClick={onAdd}>
-          Write about someone
+        <button className="mvp-btn mvp-btn-secondary mvp-btn-block mvp-page-action" type="button" onClick={onAddPerson}>
+          Add someone
         </button>
       </main>
     </>
@@ -567,24 +704,35 @@ function RelativeScreen({
   onBack,
   onOpenStory,
   onWrite,
+  onEdit,
 }: {
   relative: Relative
   stories: Story[]
   onBack: () => void
   onOpenStory: (id: string) => void
   onWrite: () => void
+  onEdit: () => void
 }) {
+  const meta = personMeta(relative)
   return (
     <>
       <header className="mvp-top">
-        <button className="mvp-back" onClick={onBack}>← Back</button>
+        <button className="mvp-back" type="button" onClick={onBack}>← Back</button>
       </header>
       <main className="mvp-body mvp-page">
         <div className="mvp-page-head">
-          <h1 className="mvp-h1">{personLabel(relative)}</h1>
-          <button className="mvp-btn mvp-btn-secondary mvp-page-action-header" onClick={onWrite}>
-            Write a story
-          </button>
+          <div>
+            <h1 className="mvp-h1">{relative.name}</h1>
+            {meta && <p className="mvp-lede">{meta}</p>}
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <button className="mvp-btn mvp-btn-secondary mvp-page-action-header" type="button" onClick={onEdit}>
+              Edit
+            </button>
+            <button className="mvp-btn mvp-btn-secondary mvp-page-action-header" type="button" onClick={onWrite}>
+              Write a story
+            </button>
+          </div>
         </div>
         <div className="mvp-card-grid mvp-relative-stories-grid">
           {stories.map((item) => {
@@ -702,7 +850,7 @@ function WriteScreen({
   editing,
   onCancel,
   onSaved,
-  onRefreshRelatives,
+  onAddRelative,
 }: {
   userId: string
   relatives: Relative[]
@@ -711,48 +859,26 @@ function WriteScreen({
   editing?: Story
   onCancel: () => void
   onSaved: (story: Story) => void
-  onRefreshRelatives?: () => void
+  onAddRelative: () => void
 }) {
   const [selectedId, setSelectedId] = useState(
     editing?.relativeId ?? presetRelativeId ?? relatives[0]?.id ?? '',
   )
-  const [addingNew, setAddingNew] = useState(relatives.length === 0 && !editing)
-  const [newName, setNewName] = useState('')
-  const [newRelationship, setNewRelationship] = useState('')
   const [promptValue, setPromptValue] = useState(editing?.prompt ?? prompt ?? '')
   const [titleValue, setTitleValue] = useState(editing?.title ?? '')
   const [text, setText] = useState(editing?.text ?? '')
-  const [nameError, setNameError] = useState('')
-  const [relationshipError, setRelationshipError] = useState('')
+  const [personError, setPersonError] = useState('')
   const [textError, setTextError] = useState('')
 
   function save() {
-    let relativeId = selectedId
-    if (addingNew || !relativeId) {
-      if (!addingNew) {
-        setNameError('Choose who this story is about before saving.')
-        return
-      }
-      let hasError = false
-      if (!newName.trim()) {
-        setNameError('Add their name before saving.')
-        hasError = true
-      }
-      if (!newRelationship.trim()) {
-        setRelationshipError('Add their relationship to you before saving.')
-        hasError = true
-      }
-      if (hasError) return
-
-      const created = store.saveRelative({
-        userId,
-        name: newName.trim(),
-        relationship: newRelationship.trim(),
-      })
-      relativeId = created.id
-      if (onRefreshRelatives) {
-        onRefreshRelatives()
-      }
+    if (!editing && relatives.length === 0) {
+      onAddRelative()
+      return
+    }
+    const relativeId = editing?.relativeId ?? selectedId
+    if (!relativeId) {
+      setPersonError('Choose who this story is about before saving.')
+      return
     }
     if (!text.trim()) {
       setTextError('Write something you want to remember before saving.')
@@ -770,114 +896,52 @@ function WriteScreen({
     onSaved(saved)
   }
 
-  function handleAddPerson() {
-    let hasError = false
-    if (!newName.trim()) {
-      setNameError('Add their name before saving.')
-      hasError = true
-    }
-    if (!newRelationship.trim()) {
-      setRelationshipError('Add their relationship to you before saving.')
-      hasError = true
-    }
-    if (hasError) return
-
-    const created = store.saveRelative({
-      userId,
-      name: newName.trim(),
-      relationship: newRelationship.trim(),
-    })
-    if (onRefreshRelatives) {
-      onRefreshRelatives()
-    }
-    setSelectedId(created.id)
-    setAddingNew(false)
-    setNewName('')
-    setNewRelationship('')
-    setNameError('')
-    setRelationshipError('')
-  }
-
-  function handleCancelAdd() {
-    setAddingNew(false)
-    setNewName('')
-    setNewRelationship('')
-    setNameError('')
-    setRelationshipError('')
-    if (relatives.length > 0) {
-      if (!selectedId) setSelectedId(relatives[0]?.id ?? '')
-    }
+  if (!editing && relatives.length === 0) {
+    return (
+      <>
+        <header className="mvp-top">
+          <button className="mvp-back" type="button" onClick={onCancel}>← Back</button>
+        </header>
+        <main className="mvp-body mvp-page mvp-stage-center">
+          <h1 className="mvp-h1">Add someone first</h1>
+          <p className="mvp-lede">Stories belong to a person. Add them on the People tab, then come back to write.</p>
+          <button className="mvp-btn mvp-btn-primary mvp-btn-block" type="button" onClick={onAddRelative}>
+            Add someone
+          </button>
+        </main>
+      </>
+    )
   }
 
   return (
     <>
       <header className="mvp-top">
-        <button className="mvp-back" onClick={onCancel}>← Back</button>
+        <button className="mvp-back" type="button" onClick={onCancel}>← Back</button>
       </header>
       <main className={`mvp-body mvp-write${editing ? ' mvp-write-solo' : ''}`}>
         {!editing && (
           <div className="mvp-write-side">
             <div className="mvp-write-person-selector">
               <span className="mvp-label">Who is this about?</span>
-              {!addingNew && relatives.length > 0 && (
-                <select
-                  className="mvp-select"
-                  value={selectedId}
-                  onChange={(event) => {
-                    setSelectedId(event.target.value)
-                    setNameError('')
-                  }}
-                >
-                  {relatives.map((person) => (
-                    <option key={person.id} value={person.id}>
-                      {personLabel(person)}
-                    </option>
-                  ))}
-                </select>
-              )}
-              {addingNew ? (
-                <div className="mvp-add-person-form">
-                  <div className="mvp-subfield">
-                    <label className="mvp-label">Name</label>
-                    <input className="mvp-input" value={newName} onChange={(event) => { setNewName(event.target.value); setNameError('') }} />
-                    {nameError && <p className="mvp-error">{nameError}</p>}
-                  </div>
-                  <RelationshipField
-                    value={newRelationship}
-                    onChange={(val) => { setNewRelationship(val); setRelationshipError('') }}
-                    error={relationshipError}
-                  />
-                  <div className="mvp-add-person-actions">
-                    {relatives.length > 0 && (
-                      <button
-                        type="button"
-                        className="mvp-btn mvp-btn-secondary mvp-add-person-cancel"
-                        onClick={handleCancelAdd}
-                      >
-                        Cancel
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="mvp-btn mvp-btn-primary mvp-add-person-confirm"
-                      onClick={handleAddPerson}
-                    >
-                      Add person
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  className="mvp-btn mvp-btn-secondary mvp-btn-block mvp-add-someone"
-                  onClick={() => {
-                    setAddingNew(true)
-                    setNameError('')
-                  }}
-                >
-                  Add someone
-                </button>
-              )}
+              <select
+                className="mvp-select"
+                value={selectedId}
+                onChange={(event) => {
+                  setSelectedId(event.target.value)
+                  setPersonError('')
+                }}
+              >
+                {relatives.map((person) => (
+                  <option key={person.id} value={person.id}>
+                    {person.name}
+                    {person.dateOfBirth ? ` · ${formatBirthDate(person.dateOfBirth)}` : ''}
+                  </option>
+                ))}
+              </select>
+              {personError && <p className="mvp-error">{personError}</p>}
+              <p className="mvp-lede" style={{ marginTop: '0.75rem', fontSize: '0.875rem' }}>
+                To add a new person, use People → Add someone.
+              </p>
             </div>
           </div>
         )}
@@ -930,55 +994,3 @@ function SettingsScreen({ userId, onSignOut }: { userId: string; onSignOut: () =
   )
 }
 
-function RelationshipField({
-  value,
-  onChange,
-  error,
-}: {
-  value: string
-  onChange: (value: string) => void
-  error?: string
-}) {
-  const [focused, setFocused] = useState(false)
-  const matches = useMemo(() => {
-    const query = value.trim().toLowerCase()
-    if (!query) return []
-    return RELATIONSHIP_SUGGESTIONS.filter(
-      (item) => item.includes(query) && item !== query
-    ).slice(0, 5)
-  }, [value])
-
-  return (
-    <div className="mvp-field" style={{ position: 'relative' }}>
-      <label>
-        <span className="mvp-label">Relationship to you</span>
-        <input
-          className="mvp-input"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setTimeout(() => setFocused(false), 200)}
-          autoComplete="off"
-        />
-      </label>
-      {error && <p className="mvp-error">{error}</p>}
-      {focused && matches.length > 0 && (
-        <div className="mvp-relationship-autocomplete">
-          {matches.map((item) => (
-            <button
-              key={item}
-              type="button"
-              className="mvp-autocomplete-option"
-              onClick={() => {
-                onChange(item)
-                setFocused(false)
-              }}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}

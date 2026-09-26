@@ -3,6 +3,8 @@ export type Relative = {
   userId: string
   name: string
   relationship: string
+  /** ISO date (YYYY-MM-DD) */
+  dateOfBirth: string
 }
 
 export type Story = {
@@ -34,6 +36,8 @@ export type Screen =
   | 'onboarding-story'
   | 'home'
   | 'people'
+  | 'add-relative'
+  | 'edit-relative'
   | 'relative'
   | 'story'
   | 'write'

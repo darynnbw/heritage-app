@@ -14,6 +14,7 @@ const seed: HeritageDB = {
       userId: USER,
       name: 'Eleanor',
       relationship: 'grandmother',
+      dateOfBirth: '1932-04-08',
     },
   ],
   stories: [
@@ -36,6 +37,11 @@ function load(): HeritageDB {
     const parsed = JSON.parse(raw) as HeritageDB
     if (!parsed.users?.length) return structuredClone(seed)
     parsed.stories = (parsed.stories || []).filter((s) => s.id !== 'story-attic')
+    parsed.relatives = (parsed.relatives || []).map((item) => ({
+      ...item,
+      relationship: item.relationship ?? '',
+      dateOfBirth: item.dateOfBirth ?? '',
+    }))
     return parsed
   } catch {
     return structuredClone(seed)
@@ -113,7 +119,14 @@ export const store = {
     const db = load()
     if (input.id) {
       db.relatives = db.relatives.map((item) =>
-        item.id === input.id ? { ...item, name: input.name, relationship: input.relationship } : item,
+        item.id === input.id
+          ? {
+              ...item,
+              name: input.name,
+              relationship: input.relationship,
+              dateOfBirth: input.dateOfBirth,
+            }
+          : item,
       )
       save(db)
       return db.relatives.find((item) => item.id === input.id)!
