@@ -1,0 +1,67 @@
+<div class="clip" data-composition-id="05-preserve" style="width: 100%; height: 100%; background: var(--canvas, #fff); position: relative; display: flex; flex-direction: column-reverse; align-items: center; justify-content: center; font-family: var(--body-font, sans-serif); gap: 40px;">
+  <div style="display: flex; flex-direction: column; align-items: center; text-align: center; opacity: 0; animation: fadeSlide 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
+    <h2 style="font-size: 72px; font-weight: 700; color: var(--ink); margin-bottom: 24px; font-family: var(--display-font, serif);">Preserve</h2>
+    <p style="font-size: 36px; color: var(--quiet); max-width: 500px;">Save the memory.</p>
+  </div>
+  
+  <div style="display: flex; justify-content: center;">
+    <div class="preserve-container" style="width: 600px; border-radius: 32px; box-shadow: 0 40px 80px rgba(0,0,0,0.1); background: var(--paper); border: 2px solid var(--line); padding: 48px; display: flex; flex-direction: column;">
+      <h1 style="font-family: var(--display-font); font-size: 40px; font-weight: 600;">Sunday Bread</h1>
+      <div style="color: var(--quiet); margin-top: 12px; font-size: 24px;">Grandma Eleanor · Grandmother</div>
+      <div class="mvp-quote text-wipe" style="font-weight: 400; margin-top: 40px; font-size: 28px; line-height: 1.5;">
+        Every Sunday, Grandma Eleanor filled the kitchen with warm bread and stories from home.
+      </div>
+      <div style="margin-top: 48px; display: flex; justify-content: center; gap: 24px;">
+        <button class="mvp-btn mvp-btn-ghost" style="font-size: 24px; padding: 16px 32px; border-radius: 32px; display: flex; align-items: center; gap: 8px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          Cancel
+        </button>
+        <button class="mvp-btn mvp-btn-primary save-btn" style="font-size: 24px; padding: 16px 40px; border-radius: 32px; position: relative; display: flex; align-items: center; gap: 12px;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+          Save Story
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<style>
+  @keyframes fadeSlide {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .preserve-container {
+    animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes slideUp {
+    0% { opacity: 0; transform: translateY(60px) scale(0.9); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .text-wipe {
+    background: linear-gradient(to right, var(--ink) 50%, #cbd5e1 50%);
+    background-size: 200% 100%;
+    background-position: 100% 0;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: wipeIn 2.5s cubic-bezier(0.16, 1, 0.3, 1) 1s forwards;
+  }
+  @keyframes wipeIn {
+    to { background-position: 0% 0; }
+  }
+
+  .save-btn {
+    animation: btnClick 0.2s cubic-bezier(0.16, 1, 0.3, 1) 1.8s both;
+  }
+  @keyframes btnClick {
+    0% { transform: scale(1); }
+    40% { transform: scale(0.94); background: var(--accent-hover); }
+    100% { transform: scale(1); background: var(--accent); }
+  }
+
+  .clip {
+    animation: sceneOut 0.2s cubic-bezier(0.16, 1, 0.3, 1) 2.0s forwards;
+  }
+  @keyframes sceneOut {
+    to { opacity: 0; transform: scale(0.98); }
+  }
+</style>

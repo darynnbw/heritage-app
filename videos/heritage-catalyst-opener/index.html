@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js" integrity="sha384-sG0Hv1tP1lZCk9KQmrIbY/XNwi+OY84GQqhMscbnsoBFqAz8KNCil1kvfL3Hbbk2" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="assets/mvp.css" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #000;
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #ffffff;
+      }
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="30"
+      data-width="1920"
+      data-height="1080"
+    >
+
+
+      <div
+        id="el-01-emotional-hook"
+        class="scene"
+        data-composition-id="01-emotional-hook"
+        data-composition-src="compositions/frames/01-emotional-hook.html"
+        data-start="0"
+        data-duration="3"
+        data-track-index="1"
+      ></div>
+
+      <div
+        id="el-02-pick-prompt"
+        class="scene"
+        data-composition-id="02-pick-prompt"
+        data-composition-src="compositions/frames/02-pick-prompt.html"
+        data-start="3"
+        data-duration="1.8"
+        data-track-index="1"
+      ></div>
+
+      <div
+        id="el-03-choose-person"
+        class="scene"
+        data-composition-id="03-choose-person"
+        data-composition-src="compositions/frames/03-choose-person.html"
+        data-start="4.8"
+        data-duration="2"
+        data-track-index="1"
+      ></div>
+
+      <div
+        id="el-04-speak-or-write"
+        class="scene"
+        data-composition-id="04-speak-or-write"
+        data-composition-src="compositions/frames/04-speak-or-write.html"
+        data-start="6.8"
+        data-duration="7"
+        data-track-index="1"
+      ></div>
+
+      <div
+        id="el-05-preserve"
+        class="scene"
+        data-composition-id="05-preserve"
+        data-composition-src="compositions/frames/05-preserve.html"
+        data-start="13.8"
+        data-duration="2.2"
+        data-track-index="1"
+      ></div>
+
+      <div
+        id="el-06-relive-memory"
+        class="scene"
+        data-composition-id="06-relive-memory"
+        data-composition-src="compositions/frames/06-relive-memory.html"
+        data-start="16"
+        data-duration="8"
+        data-track-index="1"
+      ></div>
+
+      <div
+        id="el-07-end-card"
+        class="scene"
+        data-composition-id="07-end-card"
+        data-composition-src="compositions/frames/07-end-card.html"
+        data-start="24"
+        data-duration="3"
+        data-track-index="1"
+      ></div>
+
+      <!-- UI Microinteraction Sound Effects (Track 2) -->
+      <!-- Swipe/Swap in 02 -->
+      <audio class="clip" src="assets/audio/swipe.mp3" data-start="3.8" data-track-index="2"></audio>
+      <!-- Button Click in 02 (Answer) -->
+      <audio class="clip" src="assets/audio/click.mp3" data-start="4.4" data-track-index="2"></audio>
+      
+      <!-- Choose Person Click in 03 -->
+      <audio class="clip" src="assets/audio/tap.mp3" data-start="6.1" data-track-index="2"></audio>
+      
+      <!-- Mic Button Tap in 04 -->
+      <audio class="clip" src="assets/audio/tap-hollow.mp3" data-start="8.1" data-track-index="2"></audio>
+      
+      <!-- Preserve Save Button Click & Ripple in 05 -->
+      <audio class="clip" src="assets/audio/click-deep.mp3" data-start="15.6" data-track-index="2"></audio>
+      <audio class="clip" src="assets/audio/success-chime.mp3" data-start="15.7" data-track-index="3"></audio>
+
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = gsap.timeline({ paused: true });
+    </script>
+  </body>
+</html>

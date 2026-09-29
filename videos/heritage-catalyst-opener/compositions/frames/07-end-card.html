@@ -1,0 +1,79 @@
+<div class="clip" data-composition-id="07-end-card" style="width: 100%; height: 100%; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--body-font, sans-serif); gap: 40px; overflow: hidden;" data-width="1920" data-height="1080">
+  
+  <div class="brand-bg"></div>
+  <div class="film-grain"></div>
+
+  <div style="text-align: center; z-index: 2; display: flex; flex-direction: column; align-items: center;">
+    <div class="logo-text" style="font-family: var(--display-font, serif); font-size: 110px; color: var(--on-accent, #ffffff); font-weight: 500; margin-bottom: 24px; letter-spacing: -2px;">Heritage</div>
+    <div class="subtitle-text" style="font-family: var(--display-font, serif); font-size: 40px; color: rgba(255, 255, 255, 0.85); max-width: 600px; line-height: 1.4; opacity: 0; font-weight: 400;">
+      Read, listen, and hold onto the moments that matter.
+    </div>
+  </div>
+
+</div>
+<style>
+  .brand-bg {
+    position: absolute;
+    inset: -50%;
+    background: radial-gradient(circle at center, var(--accent, #0f766e) 0%, #064e3b 80%, #022c22 100%);
+    z-index: 0;
+    animation: bgBreathe 8s ease-in-out infinite alternate;
+  }
+
+  .film-grain {
+    position: absolute;
+    inset: -100%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='1' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.12;
+    mix-blend-mode: overlay;
+    z-index: 1;
+    pointer-events: none;
+    animation: grainJitter 0.4s step-end infinite;
+  }
+
+  @keyframes grainJitter {
+    0% { transform: translate(0, 0); }
+    10% { transform: translate(-5%, -5%); }
+    20% { transform: translate(-10%, 5%); }
+    30% { transform: translate(5%, -10%); }
+    40% { transform: translate(-5%, 15%); }
+    50% { transform: translate(-10%, 5%); }
+    60% { transform: translate(15%, 0); }
+    70% { transform: translate(0, 15%); }
+    80% { transform: translate(3%, 15%); }
+    90% { transform: translate(-10%, 10%); }
+    100% { transform: translate(0, 0); }
+  }
+
+  @keyframes bgBreathe {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.1); opacity: 0.9; }
+  }
+
+  .logo-text {
+    opacity: 0;
+    transform: scale(0.9);
+    filter: blur(10px);
+    animation: cinematicLogo 2s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards,
+               logoDrift 6s linear 0.2s forwards;
+  }
+  
+  .subtitle-text {
+    animation: fadeSlideUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.0s forwards;
+  }
+  
+  @keyframes cinematicLogo {
+    0% { opacity: 0; transform: scale(0.95); filter: blur(10px); }
+    100% { opacity: 1; transform: scale(1); filter: blur(0); }
+  }
+  
+  @keyframes logoDrift {
+    0% { letter-spacing: -2px; }
+    100% { letter-spacing: 2px; }
+  }
+
+  @keyframes fadeSlideUp {
+    0% { opacity: 0; transform: translateY(40px); filter: blur(4px); }
+    100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+  }
+</style>

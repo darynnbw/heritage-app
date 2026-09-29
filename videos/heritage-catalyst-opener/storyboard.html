@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Storyboard v1: Heritage Catalyst Opener</title>
+  <style>
+    :root {
+      --ink: #0f172a;
+      --canvas: #ffffff;
+      --accent: #0f766e;
+      --display-font: "Lora", serif;
+      --body-font: "SF Pro", system-ui, sans-serif;
+    }
+    body {
+      background: #f8f9fa;
+      color: var(--ink);
+      font-family: var(--body-font);
+      margin: 0;
+      padding: 40px;
+    }
+    header {
+      margin-bottom: 40px;
+    }
+    header h1 {
+      font-family: var(--display-font);
+      font-size: 2rem;
+      margin: 0 0 10px 0;
+    }
+    header p {
+      margin: 0;
+      color: #555;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 30px;
+    }
+    .cell {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .screen {
+      aspect-ratio: 16 / 9;
+      container-type: inline-size;
+      background: var(--canvas);
+      position: relative;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      color: var(--ink);
+    }
+    .phone {
+      width: 25cqw;
+      height: 50cqw;
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3cqw;
+      text-align: center;
+      padding: 2cqw;
+      box-sizing: border-box;
+      position: relative;
+      background: white;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+    .info {
+      padding: 15px;
+    }
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #666;
+    }
+    .desc {
+      font-size: 0.9rem;
+      line-height: 1.4;
+      margin-bottom: 10px;
+    }
+    .seam {
+      display: inline-block;
+      background: #eee;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      font-weight: bold;
+      color: #888;
+    }
+    .voiceover {
+      font-size: 0.85rem;
+      color: var(--accent);
+      font-style: italic;
+      margin-top: 10px;
+    }
+    
+    /* Frame Specifics */
+    #frame-1 .text { font-family: var(--display-font); font-size: 5cqw; color: var(--ink); position: absolute; max-width: 80%; text-align: center; }
+    #frame-2 .phone .card { background: #f0fdfa; border: 1px solid var(--accent); border-radius: 8px; width: 80%; height: 20%; display: flex; align-items: center; justify-content: center; font-size: 2.5cqw; }
+    #frame-3 .phone .person { background: #eee; width: 80%; height: 15%; margin: 2cqw 0; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2.5cqw; }
+    #frame-4 .phone .mic { width: 10cqw; height: 10cqw; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; position: absolute; bottom: 5cqw; font-size: 2cqw;}
+    #frame-5 .phone .btn { background: var(--accent); color: white; padding: 2cqw 4cqw; border-radius: 20px; position: absolute; bottom: 5cqw; font-size: 2cqw;}
+    #frame-6 .phone .story { text-align: left; font-size: 2cqw; align-self: flex-start; padding-top: 5cqw; }
+    #frame-7 .phone .waveform { width: 80%; height: 4cqw; background: #ddd; border-radius: 2px; position: absolute; bottom: 10cqw; display: flex; align-items: center; justify-content: space-around; overflow: hidden;}
+    #frame-7 .phone .waveform .bar { width: 10%; height: 100%; background: var(--accent); }
+    #frame-8 .lockup { font-family: var(--display-font); font-size: 6cqw; color: var(--ink); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Storyboard v1: Heritage Catalyst Opener</h1>
+    <p>30s · 1920x1080 · 8 Beats</p>
+    <p>Message: Heritage — keep the stories only your family can tell.</p>
+  </header>
+
+  <div class="grid">
+    <!-- Frame 1 -->
+    <div class="cell">
+      <div class="screen" id="frame-1">
+        <div class="text">What's a memory you never want to lose?</div>
+        <div class="phone" style="opacity: 0.2;"></div>
+      </div>
+      <div class="info">
+        <div class="meta"><span>01 · Hook</span><span>0s–3s</span></div>
+        <div class="desc">A gentle question appears softly. A teal line draws the outline of the phone.</div>
+        <span class="seam">cut</span>
+      </div>
+    </div>
+
+    <!-- Frame 2 -->
+    <div class="cell">
+      <div class="screen" id="frame-2">
+        <div class="phone">
+          <div class="card">Recipe Prompt</div>
+        </div>
+      </div>
+      <div class="info">
+        <div class="meta"><span>02 · Pick a prompt</span><span>3s–6s</span></div>
+        <div class="desc">Phone enters fully. Prompt cards glide past. 'Recipe' prompt is selected.</div>
+        <span class="seam">cut</span>
+      </div>
+    </div>
+
+    <!-- Frame 3 -->
+    <div class="cell">
+      <div class="screen" id="frame-3">
+        <div class="phone" style="flex-direction: column; justify-content: flex-start; padding-top: 10cqw;">
+          <div class="person">Dad</div>
+          <div class="person" style="background: #ccfbf1; border: 1px solid var(--accent);">Grandma Eleanor</div>
+          <div class="person">Aunt Maya</div>
+        </div>
+      </div>
+      <div class="info">
+        <div class="meta"><span>03 · Choose a person</span><span>6s–9s</span></div>
+        <div class="desc">'Who is this about?' screen. People rise into view. Eleanor is selected.</div>
+        <span class="seam">cut</span>
+      </div>
+    </div>
+
+    <!-- Frame 4 -->
+    <div class="cell">
+      <div class="screen" id="frame-4">
+        <div class="phone">
+          <div style="font-size: 2cqw; position: absolute; top: 10cqw; text-align: left; padding: 0 2cqw;">Every Sunday...</div>
+          <div class="mic">Mic</div>
+        </div>
+      </div>
+      <div class="info">
+        <div class="meta"><span>04 · Speak or write</span><span>9s–16s</span></div>
+        <div class="desc">Composer opens. Tap dictate. Mic pulse. Live transcription words appear.</div>
+        <span class="seam">cut</span>
+      </div>
+    </div>
+
+    <!-- Frame 5 -->
+    <div class="cell">
+      <div class="screen" id="frame-5">
+        <div class="phone">
+          <div style="font-size: 4cqw; position: absolute; top: 10cqw;">Sunday Bread</div>
+          <div class="btn">Save</div>
+        </div>
+      </div>
+      <div class="info">
+        <div class="meta"><span>05 · Preserve it</span><span>16s–19s</span></div>
+        <div class="desc">Enter title 'Sunday Bread'. Tap Save. Card folds into Eleanor's archive.</div>
+        <span class="seam">cut</span>
+      </div>
+    </div>
+
+    <!-- Frame 6 -->
+    <div class="cell">
+      <div class="screen" id="frame-6">
+        <div class="phone">
+          <div class="story">
+            <strong>Sunday Bread</strong><br/><br/>
+            Every Sunday, Grandma Eleanor filled the kitchen...
+          </div>
+        </div>
+      </div>
+      <div class="info">
+        <div class="meta"><span>06 · Read the memory</span><span>19s–24s</span></div>
+        <div class="desc">Open the saved story. Audience reads the beautiful editorial layout.</div>
+        <span class="seam">cut</span>
+      </div>
+    </div>
+
+    <!-- Frame 7 -->
+    <div class="cell">
+      <div class="screen" id="frame-7">
+        <div class="phone">
+          <div class="story" style="opacity: 0.5;">
+            <strong>Sunday Bread</strong><br/><br/>
+            Every Sunday, Grandma Eleanor filled the kitchen...
+          </div>
+          <div class="waveform">
+            <div class="bar" style="height: 40%"></div>
+            <div class="bar" style="height: 80%"></div>
+            <div class="bar" style="height: 30%"></div>
+            <div class="bar" style="height: 90%"></div>
+            <div class="bar" style="height: 50%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="info">
+        <div class="meta"><span>07 · Hear the memory</span><span>24s–27s</span></div>
+        <div class="desc">Tap Listen. Waveform animates as voice plays.</div>
+        <div class="voiceover">VO: "Every Sunday, Grandma Eleanor filled the kitchen with warm bread and stories from home."</div>
+        <span class="seam">cut</span>
+      </div>
+    </div>
+
+    <!-- Frame 8 -->
+    <div class="cell">
+      <div class="screen" id="frame-8">
+        <div class="lockup">Heritage</div>
+        <div style="position: absolute; bottom: 20%; font-family: var(--display-font); font-size: 2.5cqw;">Read, listen, and hold onto the moments that matter.</div>
+      </div>
+      <div class="info">
+        <div class="meta"><span>08 · End card</span><span>27s–30s</span></div>
+        <div class="desc">Phone pulls back. Final Heritage lockup and tagline.</div>
+        <span class="seam">cut</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

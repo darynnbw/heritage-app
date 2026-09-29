@@ -1,0 +1,85 @@
+<div class="clip" data-composition-id="02-pick-prompt" style="width: 100%; height: 100%; background: var(--canvas, #fff); position: relative; display: flex; align-items: center; justify-content: center; font-family: var(--body-font, sans-serif); gap: 100px;">
+  <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-end; text-align: right; opacity: 0; animation: fadeSlide 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
+    <h2 style="font-size: 72px; font-weight: 700; color: var(--ink); margin-bottom: 24px; font-family: var(--display-font, serif);">Pick a prompt</h2>
+    <p style="font-size: 36px; color: var(--quiet); max-width: 500px;">Choose a memory to explore.</p>
+  </div>
+  
+  <div style="flex: 1; display: flex; justify-content: flex-start; position: relative;">
+    <img src="assets/images/cherry-blossom-cuate-1.svg" style="position: absolute; right: 80px; bottom: -40px; height: 320px; z-index: 0; opacity: 0; animation: fadeSlideUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;">
+    <div class="prompt-swap-container" style="width: 600px; border-radius: 32px; box-shadow: 0 40px 80px rgba(0,0,0,0.1); position: relative; overflow: hidden; background: var(--paper); border: 2px solid var(--line); padding: 48px; display: flex; flex-direction: column; gap: 40px; z-index: 1;">
+      <div class="prompt-text-wrapper" style="position: relative; height: 320px;">
+         <h3 class="mvp-quote prompt-1" style="position: absolute; inset: 0; display: flex; align-items: center; font-size: 56px; line-height: 1.25; margin: 0;">How did your parents meet?</h3>
+         <h3 class="mvp-quote prompt-2" style="position: absolute; inset: 0; display: flex; align-items: center; opacity: 0; font-size: 56px; line-height: 1.25; margin: 0;">What is a memory you never want to lose?</h3>
+         <h3 class="mvp-quote prompt-3" style="position: absolute; inset: 0; display: flex; align-items: center; opacity: 0; font-size: 56px; line-height: 1.25; margin: 0; color: var(--ink);">What was a family recipe that only they could get right?</h3>
+      </div>
+      <button class="mvp-btn mvp-btn-primary mvp-btn-block btn-answer" style="border-radius: 40px; font-size: 28px; padding: 24px; height: auto; display: flex; align-items: center; justify-content: center; gap: 12px;">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+        Answer
+      </button>
+    </div>
+  </div>
+</div>
+<style>
+  @keyframes fadeSlide {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .prompt-swap-container {
+    animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes slideUp {
+    0% { opacity: 0; transform: translateY(60px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  
+  .prompt-1 {
+    animation: slideOutUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+  }
+  .prompt-2 {
+    animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards,
+               slideOutUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.0s forwards;
+  }
+  .prompt-3 {
+    animation: slideInUpAndFocus 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.0s forwards;
+    transform-origin: left center;
+  }
+  
+  @keyframes slideInUpAndFocus {
+    0% { transform: translateY(100%) scale(1); opacity: 0; }
+    60% { transform: translateY(0) scale(1); opacity: 1; filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+    100% { transform: translateY(0) scale(1.05); opacity: 1; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.1)); }
+  }
+  
+  @keyframes slideOutUp {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-100%); opacity: 0; }
+  }
+  @keyframes slideInUp {
+    0% { transform: translateY(100%); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  
+  .btn-answer {
+    animation: buttonPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.4s both,
+               btnPress 0.2s cubic-bezier(0.16, 1, 0.3, 1) 2.5s forwards;
+  }
+  @keyframes buttonPop {
+    0% { transform: scale(0.95); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes btnPress {
+    0% { transform: scale(1); background: var(--accent); }
+    50% { transform: scale(0.9); background: var(--accent-hover); }
+    100% { transform: scale(1); background: var(--accent); }
+  }
+  .clip {
+    animation: sceneOut 0.2s cubic-bezier(0.16, 1, 0.3, 1) 1.6s forwards;
+  }
+  @keyframes sceneOut {
+    to { opacity: 0; transform: scale(0.98); }
+  }
+  @keyframes fadeSlideUp {
+    0% { opacity: 0; transform: translateY(40px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+</style>

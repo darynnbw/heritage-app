@@ -1,0 +1,88 @@
+<div class="clip" data-composition-id="03-choose-person" style="width: 100%; height: 100%; background: var(--canvas, #fff); position: relative; display: flex; flex-direction: row-reverse; align-items: center; justify-content: center; font-family: var(--body-font, sans-serif); gap: 100px;">
+  <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start; text-align: left; opacity: 0; animation: fadeSlide 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
+    <h2 style="font-size: 72px; font-weight: 700; color: var(--ink); margin-bottom: 24px; font-family: var(--display-font, serif);">Choose a person</h2>
+    <p style="font-size: 36px; color: var(--quiet); max-width: 500px;">Who is this memory about?</p>
+  </div>
+  
+  <div style="flex: 1; display: flex; justify-content: flex-end;">
+    <div class="person-list-container" style="width: 600px; border-radius: 32px; box-shadow: 0 40px 80px rgba(0,0,0,0.1); background: var(--paper); border: 2px solid var(--line); padding: 48px; display: flex; flex-direction: column; gap: 24px;">
+      <div style="display: flex; justify-content: center; margin-bottom: 8px;">
+        <img src="assets/images/illustration-people.svg" style="height: 160px;">
+      </div>
+      <button class="mvp-btn mvp-btn-ghost mvp-btn-block person-btn p-1" style="justify-content: flex-start; text-align: left; padding: 24px; font-size: 28px; border-radius: 20px; display: flex; align-items: center; gap: 20px;">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--wash); border: 2px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--quiet);">D</div>
+        <div>Dad <span style="color: var(--quiet); font-weight: 400; margin-left: 12px; font-size: 24px;">Father</span></div>
+      </button>
+      <button class="mvp-btn mvp-btn-ghost mvp-btn-block person-btn p-2" style="justify-content: space-between; text-align: left; padding: 24px; font-size: 28px; border-radius: 20px; transition: all 0.3s ease; display: flex; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 20px;">
+          <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--accent-subtle); display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--accent); font-weight: 600;">G</div>
+          <div>Grandma Eleanor <span style="color: var(--accent); font-weight: 400; margin-left: 12px; font-size: 24px;">Grandmother</span></div>
+        </div>
+        <svg class="check-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="3" style="opacity: 0;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      </button>
+      <button class="mvp-btn mvp-btn-ghost mvp-btn-block person-btn p-3" style="justify-content: flex-start; text-align: left; padding: 24px; font-size: 28px; border-radius: 20px; display: flex; align-items: center; gap: 20px;">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--wash); border: 2px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--quiet);">M</div>
+        <div>Aunt Maya <span style="color: var(--quiet); font-weight: 400; margin-left: 12px; font-size: 24px;">Aunt</span></div>
+      </button>
+    </div>
+  </div>
+</div>
+<style>
+  @keyframes fadeSlide {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .person-list-container {
+    animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  @keyframes slideUp {
+    0% { opacity: 0; transform: translateY(60px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  .person-btn {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  .p-1 { animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards, dimPerson 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.5s forwards; }
+  .p-2 { 
+    animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards,
+               btnPress 0.2s cubic-bezier(0.16, 1, 0.3, 1) 1.3s forwards,
+               selectPerson 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.5s forwards; 
+  }
+  .p-3 { animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards, dimPerson 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.5s forwards; }
+  
+  @keyframes btnPress {
+    50% { transform: scale(0.96); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes popIn {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes selectPerson {
+    0% { border-color: var(--line); background: var(--paper); transform: scale(1); }
+    100% { border-color: var(--accent); background: var(--accent-subtle); transform: scale(1.05); box-shadow: 0 10px 20px rgba(161, 98, 7, 0.15); }
+  }
+  
+  .check-icon {
+    animation: showCheck 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.8s forwards;
+  }
+  @keyframes showCheck {
+    0% { opacity: 0; transform: scale(0.5); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  
+  @keyframes dimPerson {
+    0% { opacity: 1; }
+    100% { opacity: 0.4; }
+  }
+
+  .clip {
+    animation: sceneOut 0.2s cubic-bezier(0.16, 1, 0.3, 1) 1.8s forwards;
+  }
+  @keyframes sceneOut {
+    to { opacity: 0; transform: scale(0.98); }
+  }
+</style>

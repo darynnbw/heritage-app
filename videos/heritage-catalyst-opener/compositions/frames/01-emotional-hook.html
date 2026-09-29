@@ -1,0 +1,168 @@
+<div class="clip" data-composition-id="01-emotional-hook" style="width: 100%; height: 100%; background: var(--canvas, #f8fafc); position: relative; display: flex; align-items: stretch; font-family: var(--body-font, sans-serif); overflow: hidden;">
+  
+  <div style="position: absolute; inset: 0; background-image: url('assets/images/illustration-welcome.svg'); background-size: cover; background-position: center; opacity: 0.15; z-index: 0; mix-blend-mode: multiply;"></div>
+
+  <!-- LEFT: The Hook Text -->
+  <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding-left: 120px;">
+    <div class="sentence" style="font-family: var(--display-font, serif); font-size: 72px; line-height: 1.1; max-width: 600px; color: var(--ink, #0f172a); z-index: 2;">
+      <span class="word blur-in" style="--delay: 0s">What’s</span>
+      <span class="word blur-in" style="--delay: 0.15s">a</span>
+      <span class="word blur-in" style="--delay: 0.3s">memory</span><br>
+      <span style="white-space: nowrap;">
+        <span class="word blur-in" style="--delay: 0.45s">you</span>
+        <span class="word blur-in" style="--delay: 0.6s">never</span>
+        <span class="word blur-in" style="--delay: 0.75s">want</span>
+        <span class="word blur-in" style="--delay: 0.9s">to</span>
+        <span class="word blur-in highlight-drift" style="--delay: 1.1s; color: var(--accent, #0f766e);">lose?</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- RIGHT: The 3 Phones -->
+  <div style="flex: 1; position: relative; perspective: 1200px; display: flex; align-items: center; justify-content: center;">
+    <div class="phones-container" style="position: relative; width: 600px; height: 600px; transform-style: preserve-3d; right: 40px;">
+      
+      <!-- Left Phone (Pick a Prompt) -->
+      <div class="phone-mock phone-left" style="left: 0px; top: 80px; transform: rotate(-8deg) scale(0.85); z-index: 1;">
+        <div class="phone-screen" style="background: var(--canvas);">
+          <div class="phone-content" style="padding: 24px;">
+            <div style="font-family: var(--display-font); font-size: 20px; font-weight: 700; margin-bottom: 16px;">Pick a prompt</div>
+            <div class="phone-card" style="display: flex; gap: 8px; align-items: flex-start;">
+              <svg style="flex-shrink: 0; margin-top: 2px;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="7" y="7" width="10" height="10"></rect></svg>
+              <div>What was a family recipe that only they could get right?</div>
+            </div>
+            <div class="phone-card" style="opacity: 0.5;">What is your earliest memory?</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Phone (Choose Person) -->
+      <div class="phone-mock phone-right" style="right: 0px; top: 80px; transform: rotate(8deg) scale(0.85); z-index: 1;">
+        <div class="phone-screen" style="background: var(--canvas);">
+          <div class="phone-content" style="padding: 24px;">
+            <div style="font-family: var(--display-font); font-size: 20px; font-weight: 700; margin-bottom: 16px;">Choose a person</div>
+            <div class="phone-card" style="border-color: var(--accent); display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent-subtle); display: flex; align-items: center; justify-content: center; color: var(--accent); font-weight: 600;">G</div>
+                <div style="font-weight: 600;">Grandma Eleanor</div>
+              </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+            <div class="phone-card" style="display: flex; align-items: center; gap: 12px;">
+              <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--line); display: flex; align-items: center; justify-content: center; color: white;">D</div>
+              <div style="font-weight: 600;">Dad</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center Phone (Sunday Bread Memory) -->
+      <div class="phone-mock phone-center" style="left: 50%; top: 50%; transform: translate(-50%, -50%) scale(1); z-index: 2; box-shadow: 0 40px 80px rgba(15,23,42,0.15);">
+        <div class="phone-screen" style="background: var(--paper); display: flex; flex-direction: column;">
+          <div style="background: var(--wash); display: flex; justify-content: center; padding: 24px; border-bottom: 1px solid var(--line);">
+            <img src="assets/images/illustration-reading.svg" style="height: 120px; object-fit: contain;">
+          </div>
+          <div class="phone-content" style="padding: 24px;">
+            <div style="font-family: var(--display-font); font-size: 28px; font-weight: 700; color: var(--accent);">Sunday Bread</div>
+            <div style="color: var(--quiet); font-size: 14px; margin-bottom: 16px;">Grandma Eleanor</div>
+            <div style="font-size: 15px; line-height: 1.6;">Every Sunday, Grandma Eleanor filled the kitchen with warm bread and stories...</div>
+            <div style="margin-top: 16px; display: flex; align-items: center; gap: 12px; color: var(--accent);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+              <div style="height: 4px; background: var(--accent); flex-grow: 1; border-radius: 2px; opacity: 0.2;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<style>
+  .word {
+    display: inline-block;
+    color: var(--ink, #0f172a);
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    filter: blur(12px);
+    animation: cinematicBlur 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation-delay: var(--delay);
+    margin-right: 0.2em;
+  }
+  .word:last-child {
+    margin-right: 0;
+  }
+  @keyframes cinematicBlur {
+    0% { opacity: 0; filter: blur(12px); transform: translateY(20px) scale(0.95); }
+    100% { opacity: 1; filter: blur(0px); transform: translateY(0) scale(1); }
+  }
+
+  .highlight-drift {
+    animation: cinematicBlur 0.8s cubic-bezier(0.16, 1, 0.3, 1) var(--delay) forwards,
+               subtleDrift 4s ease-in-out infinite alternate var(--delay) !important;
+  }
+  @keyframes subtleDrift {
+    0% { transform: scale(1) translateX(0); }
+    100% { transform: scale(1.05) translateX(4px); text-shadow: 0 4px 12px rgba(15, 118, 110, 0.4); }
+  }
+
+  .phone-mock {
+    position: absolute;
+    width: 280px;
+    height: 560px;
+    background: #ffffff;
+    border-radius: 40px;
+    padding: 10px;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.1);
+    border: 1px solid #e2e8f0;
+    opacity: 0;
+  }
+  .phone-screen {
+    width: 100%;
+    height: 100%;
+    border-radius: 30px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid #e2e8f0;
+  }
+  .phone-card {
+    background: var(--paper, #fff);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+  }
+
+  /* Phone Entrance Animations */
+  .phone-center {
+    animation: popCenter 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.0s forwards;
+  }
+  .phone-left {
+    animation: popLeft 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.15s forwards;
+  }
+  .phone-right {
+    animation: popRight 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.3s forwards;
+  }
+
+  @keyframes popCenter {
+    0% { opacity: 0; transform: translate(-50%, -40%) scale(0.95); }
+    100% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+  }
+  @keyframes popLeft {
+    0% { opacity: 0; transform: rotate(0deg) scale(0.85) translateX(60px); }
+    100% { opacity: 1; transform: rotate(-8deg) scale(0.9) translateX(0); }
+  }
+  @keyframes popRight {
+    0% { opacity: 0; transform: rotate(0deg) scale(0.85) translateX(-60px); }
+    100% { opacity: 1; transform: rotate(8deg) scale(0.9) translateX(0); }
+  }
+
+  .clip {
+    animation: sceneOut 0.2s cubic-bezier(0.16, 1, 0.3, 1) 2.8s forwards;
+  }
+  @keyframes sceneOut {
+    to { opacity: 0; transform: scale(0.98); }
+  }
+</style>
