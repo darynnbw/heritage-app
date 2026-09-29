@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, UserPlus, FileDown, Database, Users, Globe, Sun, Moon, Map, List } from 'lucide-react';
+import { Search, UserPlus, FileDown, Database, Users, Globe, Map, List } from 'lucide-react';
 import { UI_TRANSLATIONS, type Language } from '../locales';
 
 interface MenuBarProps {
@@ -10,8 +10,6 @@ interface MenuBarProps {
   onExportJSON: () => void;
   lang: Language;
   setLang: (lang: Language) => void;
-  theme: 'light' | 'dark';
-  setTheme: (theme: 'light' | 'dark') => void;
   viewMode: 'map' | 'list';
   setViewMode: (mode: 'map' | 'list') => void;
 }
@@ -24,8 +22,6 @@ export const MenuBar: React.FC<MenuBarProps> = ({
   onExportJSON,
   lang,
   setLang,
-  theme,
-  setTheme,
   viewMode,
   setViewMode,
 }) => {
@@ -107,15 +103,6 @@ export const MenuBar: React.FC<MenuBarProps> = ({
           </button>
         </div>
 
-        {/* Theme selector toggle */}
-        <button
-          onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-          className="control-btn"
-          title={t.toggleTheme}
-          style={{ width: '2.5rem', height: '2.5rem', border: '1px solid var(--color-border)', background: 'var(--color-background)', borderRadius: '6px' }}
-        >
-          {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
-        </button>
 
         {/* Mobile View Toggle Switch (Map vs. List) */}
         <div className="mobile-view-toggle" style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', background: 'var(--color-background)', border: '1px solid var(--color-border)', padding: '0.25rem 0.5rem', borderRadius: '6px' }}>

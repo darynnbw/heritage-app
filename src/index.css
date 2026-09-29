@@ -49,27 +49,6 @@
   --transition-page: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-[data-theme="dark"] {
-  --color-background: #1C1917;
-  --color-foreground: #FAFAF9;
-  --color-card: #292524;
-  --color-card-foreground: #FAFAF9;
-  --color-primary: #FAFAF9;
-  --color-on-primary: #1C1917;
-  --color-secondary: #A8A29E;
-  --color-muted: #292524;
-  --color-muted-foreground: #A8A29E;
-  --color-border: #44403C;
-  --color-accent: #CA8A04;
-  --color-accent-light: #292001;
-  --color-accent-border: #A16207;
-
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
-  --shadow-md: 0 4px 6px rgba(0,0,0,0.4);
-  --shadow-lg: 0 10px 15px rgba(0,0,0,0.4);
-  --shadow-xl: 0 20px 25px rgba(0,0,0,0.5);
-}
-
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;

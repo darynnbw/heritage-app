@@ -25,6 +25,7 @@ import { HOME_PROMPTS, RELATIONSHIP_CHIPS, RELATIONSHIP_SUGGESTIONS } from './pr
 import { messageFromError, store } from './store'
 import { locationFromPath, pathForLocation, pushPath, replacePath } from './routes'
 import { DictateControl } from './DictateControl'
+import { PersonSelect } from './PersonSelect'
 import { StoryListenRow } from './StoryListenRow'
 import { triggerHaptic } from './haptics'
 import type { Relative, Screen, SessionUser, Story, Tab } from './types'
@@ -1888,20 +1889,20 @@ function PeopleScreen({
 }) {
   return (
     <>
-      <main className={`mvp-body mvp-page mvp-tab-screen${relatives.length > 0 ? ' mvp-page-with-add-float' : ''}`}>
-        <div className="mvp-page-head mvp-page-head-start">
+      <main className="mvp-body mvp-page mvp-tab-screen">
+        <div className="mvp-page-head mvp-page-head-people">
           <div className="mvp-page-head-copy">
             <h1 className="mvp-h1">People</h1>
-            <p className="mvp-lede">The relatives whose stories you are keeping.</p>
+            <p className="mvp-lede">Who you write about.</p>
           </div>
           {relatives.length > 0 && (
             <button
               type="button"
               className="mvp-page-add-btn"
               onClick={onAddPerson}
-              aria-label="Add someone"
             >
               <Plus aria-hidden="true" />
+              Add
             </button>
           )}
         </div>
@@ -1931,14 +1932,6 @@ function PeopleScreen({
           })}
         </div>
       </main>
-      {relatives.length > 0 && (
-        <div className="mvp-people-add-float">
-          <button type="button" className="mvp-btn mvp-btn-primary mvp-btn-block mvp-btn-lg" onClick={onAddPerson}>
-            <Plus aria-hidden="true" />
-            Add someone
-          </button>
-        </div>
-      )}
     </>
   )
 }
@@ -2021,7 +2014,7 @@ function RelativeScreen({
           'mvp-body',
           'mvp-page',
           'mvp-relative-page',
-          hasStories ? 'mvp-page-with-add-float' : 'mvp-relative-empty',
+          hasStories ? '' : 'mvp-relative-empty',
         ].join(' ')}
       >
         <div className="mvp-page-head">
@@ -2033,9 +2026,9 @@ function RelativeScreen({
               type="button"
               className="mvp-page-add-btn"
               onClick={onWrite}
-              aria-label="Write a story"
             >
               <PenLine aria-hidden="true" />
+              Write
             </button>
           )}
         </div>
@@ -2098,14 +2091,6 @@ function RelativeScreen({
           </div>
         )}
       </main>
-      {hasStories && (
-        <div className="mvp-people-add-float">
-          <button type="button" className="mvp-btn mvp-btn-primary mvp-btn-block mvp-btn-lg" onClick={onWrite}>
-            <PenLine aria-hidden="true" />
-            Write a story
-          </button>
-        </div>
-      )}
     </>
   )
 }
@@ -2444,32 +2429,27 @@ function WriteScreen({
         )}
 
         <div className="mvp-write-main">
-          {!isEditing && showPersonSelector && (
+          {(isEditing || showPersonSelector) && (
             <div className="mvp-write-person-selector">
-              <span className="mvp-label">Who is this about?</span>
-              {!addingNew && (
-                <select
-                  className="mvp-select"
+              <span className="mvp-label" id="write-person-label">Who is this about?</span>
+              {relatives.length > 0 && (
+                <PersonSelect
+                  labelledBy="write-person-label"
                   value={selectedId}
-                  onChange={(event) => {
-                    if (event.target.value === 'new') {
-                      setAddingNew(true)
-                      setNameError('')
-                    } else {
-                      setSelectedId(event.target.value)
-                      setNameError('')
-                    }
+                  people={relatives}
+                  onChange={(next) => {
+                    setSelectedId(next)
+                    setNameError('')
                   }}
-                >
-                  {relatives.map((person) => (
-                    <option key={person.id} value={person.id}>
-                      {personLabel(person)}
-                    </option>
-                  ))}
-                  <option value="new">+ Add someone...</option>
-                </select>
+                  onCreate={async ({ name, relationship }) => {
+                    const created = await store.saveRelative({ name, relationship })
+                    await onRefreshRelatives?.()
+                    setSelectedId(created.id)
+                    setNameError('')
+                  }}
+                />
               )}
-              {addingNew && (
+              {addingNew && relatives.length === 0 && (
                 <div className="mvp-add-person-form">
                   <div className="mvp-subfield">
                     <label className="mvp-label">Name</label>
@@ -2539,64 +2519,6 @@ function WriteScreen({
               placeholder="e.g. Sunday Bread"
             />
           </label>
-          {isEditing && (
-            <div className="mvp-write-person-selector">
-              <span className="mvp-label">Who is this about?</span>
-              <select
-                className="mvp-select"
-                value={selectedId}
-                onChange={(event) => {
-                  if (event.target.value === 'new') {
-                    setAddingNew(true)
-                    setNameError('')
-                  } else {
-                    setSelectedId(event.target.value)
-                    setNameError('')
-                  }
-                }}
-              >
-                {relatives.map((person) => (
-                  <option key={person.id} value={person.id}>
-                    {personLabel(person)}
-                  </option>
-                ))}
-                <option value="new">+ Add someone...</option>
-              </select>
-              {addingNew && (
-                <div className="mvp-add-person-form">
-                  <div className="mvp-subfield">
-                    <label className="mvp-label">Name</label>
-                    <input className="mvp-input" value={newName} onChange={(event) => { setNewName(event.target.value); setNameError('') }} />
-                    {nameError && <p className="mvp-error">{nameError}</p>}
-                  </div>
-                  <RelationshipField
-                    value={newRelationship}
-                    onChange={(val) => { setNewRelationship(val); setRelationshipError('') }}
-                    error={relationshipError}
-                  />
-                  <div className="mvp-add-person-actions">
-                    {relatives.length > 0 && (
-                      <button
-                        type="button"
-                        className="mvp-btn mvp-btn-ghost mvp-add-person-cancel"
-                        onClick={handleCancelAdd}
-                      >
-                        Cancel
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="mvp-btn mvp-btn-primary mvp-add-person-confirm"
-                      onClick={() => void handleAddPerson()}
-                    >
-                      Add person
-                    </button>
-                  </div>
-                </div>
-              )}
-              {nameError && !addingNew && <p className="mvp-error">{nameError}</p>}
-            </div>
-          )}
         </div>
       </main>
       <footer className="mvp-write-footer">

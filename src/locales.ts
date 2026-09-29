@@ -65,9 +65,6 @@ export const UI_TRANSLATIONS = {
     presetNeighbor: 'Neighbor Style',
     presetSilhouette: 'Archival Silhouette',
     noStoriesPrint: 'No stories archived for this person.',
-    toggleTheme: 'Toggle Theme',
-    themeDark: 'Dark',
-    themeLight: 'Light',
     viewMap: 'Map',
     viewList: 'List',
     mobileHeader: 'Family & Friends Map'
@@ -136,9 +133,6 @@ export const UI_TRANSLATIONS = {
     presetNeighbor: 'Сусід',
     presetSilhouette: 'Силует',
     noStoriesPrint: 'Для цієї особи немає збережених спогадів.',
-    toggleTheme: 'Змінити тему',
-    themeDark: 'Темна',
-    themeLight: 'Світла',
     viewMap: 'Карта',
     viewList: 'Список',
     mobileHeader: 'Карта родини та друзів'

@@ -147,11 +147,6 @@ function App() {
     return (local as Language) || 'en';
   });
 
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const local = localStorage.getItem('heritage_theme');
-    if (local === 'light' || local === 'dark') return local;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  });
 
   const [viewMode, setViewMode] = useState<'map' | 'list'>(() => {
     const local = localStorage.getItem('heritage_view_mode');
@@ -260,10 +255,6 @@ function App() {
     localStorage.setItem('heritage_lang', lang);
   }, [lang]);
 
-  useEffect(() => {
-    localStorage.setItem('heritage_theme', theme);
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
 
   useEffect(() => {
     localStorage.setItem('heritage_view_mode', viewMode);
@@ -547,8 +538,6 @@ function App() {
         onExportJSON={handleExportJSON}
         lang={lang}
         setLang={setLang}
-        theme={theme}
-        setTheme={setTheme}
         viewMode={viewMode}
         setViewMode={setViewMode}
       />
