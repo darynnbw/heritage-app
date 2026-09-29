@@ -2598,11 +2598,6 @@ function SettingsScreen({
         <div className="mvp-settings-illust" aria-hidden="true">
           <img src={settingsIllustrationUrl} alt="" decoding="async" />
         </div>
-        <p className="mvp-credits">
-          <a href="https://storyset.com" target="_blank" rel="noreferrer">
-            Illustrations by Storyset
-          </a>
-        </p>
       </div>
     </main>
   )
