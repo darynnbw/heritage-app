@@ -1,21 +1,56 @@
-<div class="clip" data-composition-id="02-pick-prompt" style="width: 100%; height: 100%; background: var(--canvas, #fff); position: relative; display: flex; align-items: center; justify-content: center; font-family: var(--body-font, sans-serif); gap: 100px;">
-  <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-end; text-align: right; opacity: 0; animation: fadeSlide 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
-    <h2 style="font-size: 72px; font-weight: 700; color: var(--ink); margin-bottom: 24px; font-family: var(--display-font, serif);">Pick a prompt</h2>
-    <p style="font-size: 36px; color: var(--quiet); max-width: 500px;">Choose a memory to explore.</p>
+<div data-hf-id="hf-nex4" class="clip" data-composition-id="02-pick-prompt" style="width: 100%; height: 100%; background: var(--canvas, #f8fafc); position: relative; display: flex; align-items: center; justify-content: center; font-family: var(--body-font, sans-serif); gap: 80px;">
+  
+  <!-- LEFT: Title & Copy -->
+  <div data-hf-id="hf-uir2" style="flex: 1; display: flex; flex-direction: column; align-items: flex-end; text-align: right; opacity: 0; animation: fadeSlide 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
+    <h2 data-hf-id="hf-ikpq" style="font-size: 64px; font-weight: 700; color: var(--ink); margin-bottom: 20px; font-family: var(--display-font, serif);">Pick a prompt</h2>
+    <p data-hf-id="hf-9odv" style="font-size: 32px; color: var(--quiet); max-width: 480px; line-height: 1.4;">Choose a memory prompt or write freely about your family.</p>
   </div>
   
-  <div style="flex: 1; display: flex; justify-content: flex-start; position: relative;">
-    <img src="assets/images/cherry-blossom-cuate-1.svg" style="position: absolute; right: 80px; bottom: -40px; height: 320px; z-index: 0; opacity: 0; animation: fadeSlideUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;">
-    <div class="prompt-swap-container" style="width: 600px; border-radius: 32px; box-shadow: 0 40px 80px rgba(0,0,0,0.1); position: relative; overflow: hidden; background: var(--paper); border: 2px solid var(--line); padding: 48px; display: flex; flex-direction: column; gap: 40px; z-index: 1;">
-      <div class="prompt-text-wrapper" style="position: relative; height: 320px;">
-         <h3 class="mvp-quote prompt-1" style="position: absolute; inset: 0; display: flex; align-items: center; font-size: 56px; line-height: 1.25; margin: 0;">How did your parents meet?</h3>
-         <h3 class="mvp-quote prompt-2" style="position: absolute; inset: 0; display: flex; align-items: center; opacity: 0; font-size: 56px; line-height: 1.25; margin: 0;">What is a memory you never want to lose?</h3>
-         <h3 class="mvp-quote prompt-3" style="position: absolute; inset: 0; display: flex; align-items: center; opacity: 0; font-size: 56px; line-height: 1.25; margin: 0; color: var(--ink);">What was a family recipe that only they could get right?</h3>
-      </div>
-      <button class="mvp-btn mvp-btn-primary mvp-btn-block btn-answer" style="border-radius: 40px; font-size: 28px; padding: 24px; height: auto; display: flex; align-items: center; justify-content: center; gap: 12px;">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
-        Answer
-      </button>
+  <!-- RIGHT: Real App HomeScreen Mockup -->
+  <div data-hf-id="hf-k98v" style="flex: 1; display: flex; justify-content: flex-start; position: relative;">
+    <img data-hf-id="hf-6uf3" src="assets/images/cherry-blossom-cuate-1.svg" style="position: absolute; right: 60px; bottom: -30px; height: 340px; z-index: 0; opacity: 0; animation: fadeSlideUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;">
+    
+    <div data-hf-id="hf-2ifn" class="phone-frame prompt-swap-container" style="width: 440px; height: 860px; background: var(--wash); border-radius: 44px; box-shadow: 0 40px 100px rgba(15,23,42,0.18); border: 8px solid #E8ECF0; overflow: hidden; position: relative; display: flex; flex-direction: column; z-index: 1;">
+      
+      <!-- Real App Header -->
+      <header style="height: 64px; background: var(--paper); border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0;">
+        <span style="font-family: var(--display-font); font-size: 26px; font-weight: 600; color: var(--accent); letter-spacing: -0.5px;">Heritage</span>
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--fill); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: var(--soft);">ME</div>
+      </header>
+
+      <!-- App Content Area -->
+      <main style="flex: 1; padding: 24px; display: flex; flex-direction: column; gap: 24px; overflow: hidden;">
+        
+        <!-- REAL MVP PROMPT CARD -->
+        <section class="mvp-prompt-card" style="margin: 0; box-shadow: 0 12px 30px rgba(0,0,0,0.05); border-radius: 20px; padding: 20px; background: var(--paper); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px;">
+          <div style="position: relative; height: 76px; overflow: hidden;">
+             <p class="mvp-quote prompt-1" style="position: absolute; inset: 0; font-size: 24px; line-height: 1.3; font-family: var(--display-font); color: var(--ink); margin: 0;">&ldquo;How did your parents meet?&rdquo;</p>
+             <p class="mvp-quote prompt-2" style="position: absolute; inset: 0; opacity: 0; font-size: 24px; line-height: 1.3; font-family: var(--display-font); color: var(--ink); margin: 0;">&ldquo;What is a memory you never want to lose?&rdquo;</p>
+             <p class="mvp-quote prompt-3" style="position: absolute; inset: 0; opacity: 0; font-size: 24px; line-height: 1.3; font-family: var(--display-font); color: var(--ink); margin: 0;">&ldquo;What was a family recipe that only they could get right?&rdquo;</p>
+          </div>
+          <div class="mvp-prompt-actions" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <button class="mvp-btn mvp-btn-ghost" type="button" style="height: 42px; font-size: 15px; border-radius: 21px; font-weight: 600;">Swap</button>
+            <button class="mvp-btn mvp-btn-primary btn-answer" type="button" style="height: 42px; font-size: 15px; border-radius: 21px; font-weight: 600;">Answer</button>
+            <button class="mvp-btn mvp-btn-secondary" type="button" style="grid-column: 1 / -1; height: 42px; font-size: 14px; border-radius: 21px; font-weight: 500;">Write without a prompt</button>
+          </div>
+        </section>
+
+        <!-- Feed Preview Section -->
+        <section style="display: flex; flex-direction: column; gap: 12px; opacity: 0.7;">
+          <h2 style="font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--quiet);">Recent entries</h2>
+          <div class="mvp-entry" style="background: var(--paper); border-radius: 16px; padding: 16px; border: 1px solid var(--line);">
+            <div style="display: flex; justify-content: space-between; font-size: 14px; color: var(--quiet); margin-bottom: 4px;">
+              <span style="font-weight: 600; color: var(--ink);">Grandma Eleanor</span>
+              <span>Apr 14</span>
+            </div>
+            <p style="font-size: 15px; color: var(--soft); margin: 0;">Every Sunday, Grandma Eleanor filled the kitchen with warm bread...</p>
+          </div>
+        </section>
+
+      </main>
+
+
+
     </div>
   </div>
 </div>
@@ -33,14 +68,14 @@
   }
   
   .prompt-1 {
-    animation: slideOutUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+    animation: slideOutUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards;
   }
   .prompt-2 {
-    animation: slideInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards,
-               slideOutUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.0s forwards;
+    animation: slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards,
+               slideOutUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.8s forwards;
   }
   .prompt-3 {
-    animation: slideInUpAndFocus 0.6s cubic-bezier(0.16, 1, 0.3, 1) 1.0s forwards;
+    animation: slideInUpAndFocus 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1.8s forwards;
     transform-origin: left center;
   }
   
@@ -60,20 +95,15 @@
   }
   
   .btn-answer {
-    animation: buttonPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.4s both,
-               btnPress 0.2s cubic-bezier(0.16, 1, 0.3, 1) 2.5s forwards;
-  }
-  @keyframes buttonPop {
-    0% { transform: scale(0.95); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
+    animation: btnPress 0.3s cubic-bezier(0.16, 1, 0.3, 1) 2.8s forwards;
   }
   @keyframes btnPress {
     0% { transform: scale(1); background: var(--accent); }
-    50% { transform: scale(0.9); background: var(--accent-hover); }
+    50% { transform: scale(0.92); background: var(--accent-hover); }
     100% { transform: scale(1); background: var(--accent); }
   }
   .clip {
-    animation: sceneOut 0.2s cubic-bezier(0.16, 1, 0.3, 1) 1.6s forwards;
+    animation: sceneOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) 4.2s forwards;
   }
   @keyframes sceneOut {
     to { opacity: 0; transform: scale(0.98); }

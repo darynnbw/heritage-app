@@ -5,10 +5,6 @@
   <!-- LEFT: The Hook Text -->
   <div data-hf-id="hf-hlxh" style="flex: 1; display: flex; align-items: center; justify-content: center; padding-left: 120px;">
     <div data-hf-id="hf-dy75" class="sentence" style="font-family: var(--display-font, serif); font-size: 72px; line-height: 1.1; max-width: 600px; color: var(--ink, #0f172a); z-index: 2;">
-      <!-- App Brand Name -->
-      <div data-hf-id="hf-brand" style="margin-bottom: 24px; opacity: 0; animation: fadeSlide 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
-        <span style="font-family: var(--display-font); font-size: 38px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px;">Heritage</span>
-      </div>
       <span data-hf-id="hf-nv4k" class="word blur-in" style="--delay: 0s">What’s</span>
       <span data-hf-id="hf-xt2v" class="word blur-in" style="--delay: 0.15s">a</span>
       <span data-hf-id="hf-8hie" class="word blur-in" style="--delay: 0.3s">memory</span><br data-hf-id="hf-x5px">
@@ -29,11 +25,11 @@
       <!-- Left Phone (Pick a Prompt) -->
       <div data-hf-id="hf-bs40" class="phone-mock phone-left" style="left: 0px; top: 80px; transform: rotate(-8deg) scale(0.85); z-index: 1;">
         <div data-hf-id="hf-7rza" class="phone-screen" style="background: var(--wash); display: flex; flex-direction: column;">
-          <div data-hf-id="hf-6i90" style="padding: 14px 16px; background: var(--paper); border-bottom: 1px solid var(--line); font-family: var(--display-font); font-size: 16px; font-weight: 700; color: var(--accent);">Heritage</div>
+          <div style="padding: 14px 16px; background: var(--paper); border-bottom: 1px solid var(--line); font-family: var(--display-font); font-size: 16px; font-weight: 700; color: var(--accent);">Heritage</div>
           <div data-hf-id="hf-0tg2" class="phone-content" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
-            <div data-hf-id="hf-jvf2" class="mvp-prompt-card" style="margin: 0; padding: 16px; border-radius: 16px; background: var(--paper); border: 1px solid var(--line);">
-              <p data-hf-id="hf-z46i" class="mvp-quote" style="font-size: 14px; font-family: var(--display-font); color: var(--ink); margin: 0 0 12px 0; line-height: 1.3;">“What was a family recipe that only they could get right?”</p>
-              <button data-hf-id="hf-m0zw" class="mvp-btn mvp-btn-primary" style="width: 100%; height: 32px; font-size: 12px; border-radius: 16px;">Answer</button>
+            <div class="mvp-prompt-card" style="margin: 0; padding: 16px; border-radius: 16px; background: var(--paper); border: 1px solid var(--line);">
+              <p class="mvp-quote" style="font-size: 14px; font-family: var(--display-font); color: var(--ink); margin: 0 0 12px 0; line-height: 1.3;">&ldquo;What was a family recipe that only they could get right?&rdquo;</p>
+              <button class="mvp-btn mvp-btn-primary" style="width: 100%; height: 32px; font-size: 12px; border-radius: 16px;">Answer</button>
             </div>
           </div>
         </div>
@@ -42,21 +38,21 @@
       <!-- Right Phone (Choose Person) -->
       <div data-hf-id="hf-iikz" class="phone-mock phone-right" style="right: 0px; top: 80px; transform: rotate(8deg) scale(0.85); z-index: 1;">
         <div data-hf-id="hf-luy2" class="phone-screen" style="background: var(--wash); display: flex; flex-direction: column;">
-          <div data-hf-id="hf-0ode" style="padding: 14px 16px; background: var(--paper); border-bottom: 1px solid var(--line); font-family: var(--display-font); font-size: 16px; font-weight: 700; color: var(--ink);">People</div>
+          <div style="padding: 14px 16px; background: var(--paper); border-bottom: 1px solid var(--line); font-family: var(--display-font); font-size: 16px; font-weight: 700; color: var(--ink);">People</div>
           <div data-hf-id="hf-ewk6" class="phone-content" style="padding: 16px; display: flex; flex-direction: column; gap: 10px;">
-            <div data-hf-id="hf-r62c" class="mvp-person" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--accent-subtle); border: 1px solid var(--accent); border-radius: 14px;">
-              <div data-hf-id="hf-hikp" style="display: flex; align-items: center; gap: 10px;">
-                <div data-hf-id="hf-m978" style="width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;">G</div>
-                <div data-hf-id="hf-yeow">
-                  <div data-hf-id="hf-w6bo" style="font-size: 13px; font-weight: 600; color: var(--ink);">Grandma Eleanor</div>
-                  <div data-hf-id="hf-xlke" style="font-size: 11px; color: var(--accent);">Grandmother</div>
+            <div class="mvp-person" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: var(--accent-subtle); border: 1px solid var(--accent); border-radius: 14px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;">G</div>
+                <div>
+                  <div style="font-size: 13px; font-weight: 600; color: var(--ink);">Grandma Eleanor</div>
+                  <div style="font-size: 11px; color: var(--accent);">Grandmother</div>
                 </div>
               </div>
-              <svg data-hf-id="hf-nkj2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polyline data-hf-id="hf-mlxs" points="20 6 9 17 4 12" /></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
-            <div data-hf-id="hf-3xci" class="mvp-person" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 14px;">
-              <div data-hf-id="hf-bz3g" style="width: 28px; height: 28px; border-radius: 50%; background: var(--fill); color: var(--soft); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">D</div>
-              <div data-hf-id="hf-7y0z" style="font-size: 13px; font-weight: 600; color: var(--ink);">Dad</div>
+            <div class="mvp-person" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 14px;">
+              <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--fill); color: var(--soft); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;">D</div>
+              <div style="font-size: 13px; font-weight: 600; color: var(--ink);">Dad</div>
             </div>
           </div>
         </div>
@@ -73,7 +69,7 @@
             <div data-hf-id="hf-pl00" style="color: var(--quiet); font-size: 13px; margin-bottom: 12px;">Grandma Eleanor • Apr 14</div>
             <div data-hf-id="hf-vuu6" style="font-size: 14px; line-height: 1.5; color: var(--soft);">Every Sunday, Grandma Eleanor filled the kitchen with warm bread and stories...</div>
             <div data-hf-id="hf-jygj" style="margin-top: 14px; display: flex; align-items: center; gap: 10px; color: var(--accent); background: var(--accent-subtle); padding: 8px 12px; border-radius: 12px;">
-              <svg data-hf-id="hf-5q1e" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon data-hf-id="hf-ehe9" points="5 3 19 12 5 21 5 3" /></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               <div data-hf-id="hf-rjht" style="height: 4px; background: var(--accent); flex-grow: 1; border-radius: 2px;"></div>
             </div>
           </div>

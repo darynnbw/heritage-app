@@ -5,11 +5,7 @@
   <!-- LEFT: The Hook Text -->
   <div data-hf-id="hf-hlxh" style="flex: 1; display: flex; align-items: center; justify-content: center; padding-left: 120px;">
     <div data-hf-id="hf-dy75" class="sentence" style="font-family: var(--display-font, serif); font-size: 72px; line-height: 1.1; max-width: 600px; color: var(--ink, #0f172a); z-index: 2;">
-      <!-- App Brand Name -->
-      <div data-hf-id="hf-brand" style="margin-bottom: 24px; opacity: 0; animation: fadeSlide 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
-        <span style="font-family: var(--display-font); font-size: 38px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px;">Heritage</span>
-      </div>
-      <span data-hf-id="hf-nv4k" class="word blur-in" style="--delay: 0s">What’s</span>
+      <span data-hf-id="hf-nv4k" class="word blur-in" style="--delay: 0s">*What’s</span>
       <span data-hf-id="hf-xt2v" class="word blur-in" style="--delay: 0.15s">a</span>
       <span data-hf-id="hf-8hie" class="word blur-in" style="--delay: 0.3s">memory</span><br data-hf-id="hf-x5px">
       <span data-hf-id="hf-9tkc" style="white-space: nowrap;">

@@ -20,7 +20,7 @@
           <div data-hf-id="hf-nu5j" style="width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;">G</div>
           <span data-hf-id="hf-1nja" style="font-size: 14px; font-weight: 600; color: var(--accent);">Grandma Eleanor</span>
         </div>
-        <button data-hf-id="hf-o8mv" type="button" class="mvp-btn mvp-btn-primary" style="padding: 8px 28px !important; min-width: 110px !important; height: 38px !important; border-radius: 20px !important; font-size: 15px !important; font-weight: 600 !important; flex-shrink: 0 !important; white-space: nowrap !important; display: inline-flex !important; align-items: center !important; justify-content: center !important;">
+        <button data-hf-id="hf-o8mv" type="button" class="mvp-btn mvp-btn-primary" style="padding: 8px 24px !important; min-width: 84px !important; height: 38px !important; border-radius: 200px; font-size: 15px !important; font-weight: 600 !important; flex-shrink: 0 !important; width: auto !important; clip-path: inset(0px)">
           Save
         </button>
       </header>
@@ -159,8 +159,8 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
 <script>
 window.__timelines = window.__timelines || {};
-gsap.set("[data-hf-id=\"hf-o8mv\"]", { x: -2, y: 0 });
+gsap.set("[data-hf-id=\"hf-o8mv\"]", { x: -23, y: 0 });
 const tl = gsap.timeline({ paused: true });
-tl.set("[data-hf-id=\"hf-o8mv\"]", { width: 77, height: 39 }, 0);
+tl.set("[data-hf-id=\"hf-o8mv\"]", { width: 62, height: 41 }, 0);
 window.__timelines["04-speak-or-write"] = tl;
 </script>

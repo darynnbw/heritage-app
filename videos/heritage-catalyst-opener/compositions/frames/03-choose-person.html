@@ -1,29 +1,83 @@
-<div class="clip" data-composition-id="03-choose-person" style="width: 100%; height: 100%; background: var(--canvas, #fff); position: relative; display: flex; flex-direction: row-reverse; align-items: center; justify-content: center; font-family: var(--body-font, sans-serif); gap: 100px;">
-  <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start; text-align: left; opacity: 0; animation: fadeSlide 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
-    <h2 style="font-size: 72px; font-weight: 700; color: var(--ink); margin-bottom: 24px; font-family: var(--display-font, serif);">Choose a person</h2>
-    <p style="font-size: 36px; color: var(--quiet); max-width: 500px;">Who is this memory about?</p>
+<div data-hf-id="hf-b1q5" class="clip" data-composition-id="03-choose-person" style="width: 100%; height: 100%; background: var(--canvas, #f8fafc); position: relative; display: flex; flex-direction: row-reverse; align-items: center; justify-content: center; font-family: var(--body-font, sans-serif); gap: 80px;">
+  
+  <!-- RIGHT: Title & Copy -->
+  <div data-hf-id="hf-4zju" style="flex: 1; display: flex; flex-direction: column; align-items: flex-start; text-align: left; opacity: 0; animation: fadeSlide 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;">
+    <h2 data-hf-id="hf-q4tp" style="font-size: 64px; font-weight: 700; color: var(--ink); margin-bottom: 20px; font-family: var(--display-font, serif);">Choose a person</h2>
+    <p data-hf-id="hf-87f9" style="font-size: 32px; color: var(--quiet); max-width: 480px; line-height: 1.4;">Organize and group stories by the family members you love.</p>
   </div>
   
-  <div style="flex: 1; display: flex; justify-content: flex-end;">
-    <div class="person-list-container" style="width: 600px; border-radius: 32px; box-shadow: 0 40px 80px rgba(0,0,0,0.1); background: var(--paper); border: 2px solid var(--line); padding: 48px; display: flex; flex-direction: column; gap: 24px;">
-      <div style="display: flex; justify-content: center; margin-bottom: 8px;">
-        <img src="assets/images/illustration-people.svg" style="height: 160px;">
-      </div>
-      <button class="mvp-btn mvp-btn-ghost mvp-btn-block person-btn p-1" style="justify-content: flex-start; text-align: left; padding: 24px; font-size: 28px; border-radius: 20px; display: flex; align-items: center; gap: 20px;">
-        <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--wash); border: 2px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--quiet);">D</div>
-        <div>Dad <span style="color: var(--quiet); font-weight: 400; margin-left: 12px; font-size: 24px;">Father</span></div>
-      </button>
-      <button class="mvp-btn mvp-btn-ghost mvp-btn-block person-btn p-2" style="justify-content: space-between; text-align: left; padding: 24px; font-size: 28px; border-radius: 20px; transition: all 0.3s ease; display: flex; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 20px;">
-          <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--accent-subtle); display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--accent); font-weight: 600;">G</div>
-          <div>Grandma Eleanor <span style="color: var(--accent); font-weight: 400; margin-left: 12px; font-size: 24px;">Grandmother</span></div>
+  <!-- LEFT: Real App PeopleScreen Mockup -->
+  <div data-hf-id="hf-miz0" style="flex: 1; display: flex; justify-content: flex-end;">
+    <div data-hf-id="hf-p67h" class="phone-frame person-list-container" style="width: 440px; height: 860px; background: var(--wash); border-radius: 44px; box-shadow: 0 40px 100px rgba(15,23,42,0.18); border: 8px solid #E8ECF0; overflow: hidden; position: relative; display: flex; flex-direction: column; z-index: 1;">
+      
+      <!-- Real App People Page Header -->
+      <header style="padding: 24px 24px 16px 24px; background: var(--paper); border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: flex-end; flex-shrink: 0;">
+        <div>
+          <h1 style="font-family: var(--display-font); font-size: 36px; font-weight: 700; color: var(--ink); margin: 0; line-height: 1.1;">People</h1>
+          <p style="font-size: 15px; color: var(--quiet); margin: 4px 0 0 0;">Who you write about.</p>
         </div>
-        <svg class="check-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="3" style="opacity: 0;"><polyline points="20 6 9 17 4 12"></polyline></svg>
-      </button>
-      <button class="mvp-btn mvp-btn-ghost mvp-btn-block person-btn p-3" style="justify-content: flex-start; text-align: left; padding: 24px; font-size: 28px; border-radius: 20px; display: flex; align-items: center; gap: 20px;">
-        <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--wash); border: 2px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--quiet);">M</div>
-        <div>Aunt Maya <span style="color: var(--quiet); font-weight: 400; margin-left: 12px; font-size: 24px;">Aunt</span></div>
-      </button>
+        <button type="button" class="mvp-page-add-btn" style="display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--fill); border-radius: 20px; font-size: 14px; font-weight: 600; color: var(--ink); border: none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add
+        </button>
+      </header>
+
+      <!-- App Content Area: People Cards -->
+      <main style="flex: 1; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; overflow: hidden;">
+        
+        <div data-hf-id="hf-ip34" style="display: flex; justify-content: center; margin-bottom: 8px;">
+          <img data-hf-id="hf-ovgu" src="assets/images/illustration-people.svg" style="height: 140px; object-fit: contain;">
+        </div>
+
+        <!-- Person Item 1: Dad -->
+        <button type="button" class="mvp-person p-1" style="display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; background: var(--paper); border: 1.5px solid var(--line); border-radius: 20px; text-align: left;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--fill); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; color: var(--soft);">D</div>
+            <div>
+              <div style="font-size: 18px; font-weight: 600; color: var(--ink);">Dad</div>
+              <div style="font-size: 14px; color: var(--quiet);">Father</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--quiet); font-weight: 500;">
+            2 stories
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </button>
+
+        <!-- Person Item 2: Grandma Eleanor (Active Selected) -->
+        <button type="button" class="mvp-person p-2" style="display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; background: var(--paper); border: 1.5px solid var(--line); border-radius: 20px; text-align: left; transition: all 0.3s ease;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--accent-subtle); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700;">G</div>
+            <div>
+              <div style="font-size: 18px; font-weight: 600; color: var(--ink);">Grandma Eleanor</div>
+              <div style="font-size: 14px; color: var(--accent); font-weight: 500;">Grandmother</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 14px; color: var(--quiet); font-weight: 500;">4 stories</span>
+            <svg class="check-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="3" style="opacity: 0;"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </button>
+
+        <!-- Person Item 3: Aunt Maya -->
+        <button type="button" class="mvp-person p-3" style="display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; background: var(--paper); border: 1.5px solid var(--line); border-radius: 20px; text-align: left;">
+          <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--fill); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 600; color: var(--soft);">M</div>
+            <div>
+              <div style="font-size: 18px; font-weight: 600; color: var(--ink);">Aunt Maya</div>
+              <div style="font-size: 14px; color: var(--quiet);">Aunt</div>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--quiet); font-weight: 500;">
+            1 story
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </div>
+        </button>
+
+      </main>
+
+
+
     </div>
   </div>
 </div>
@@ -43,13 +97,13 @@
     opacity: 0;
     transform: translateY(20px);
   }
-  .p-1 { animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards, dimPerson 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.5s forwards; }
+  .p-1 { animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards, dimPerson 0.5s cubic-bezier(0.16, 1, 0.3, 1) 2.0s forwards; }
   .p-2 { 
     animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards,
-               btnPress 0.2s cubic-bezier(0.16, 1, 0.3, 1) 1.3s forwards,
-               selectPerson 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.5s forwards; 
+               btnPress 0.3s cubic-bezier(0.16, 1, 0.3, 1) 1.8s forwards,
+               selectPerson 0.5s cubic-bezier(0.16, 1, 0.3, 1) 2.0s forwards; 
   }
-  .p-3 { animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards, dimPerson 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1.5s forwards; }
+  .p-3 { animation: popIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards, dimPerson 0.5s cubic-bezier(0.16, 1, 0.3, 1) 2.0s forwards; }
   
   @keyframes btnPress {
     50% { transform: scale(0.96); }
@@ -63,11 +117,11 @@
   
   @keyframes selectPerson {
     0% { border-color: var(--line); background: var(--paper); transform: scale(1); }
-    100% { border-color: var(--accent); background: var(--accent-subtle); transform: scale(1.05); box-shadow: 0 10px 20px rgba(161, 98, 7, 0.15); }
+    100% { border-color: var(--accent); background: var(--accent-subtle); transform: scale(1.02); box-shadow: 0 10px 24px rgba(15, 118, 110, 0.12); }
   }
   
   .check-icon {
-    animation: showCheck 0.4s cubic-bezier(0.16, 1, 0.3, 1) 1.8s forwards;
+    animation: showCheck 0.4s cubic-bezier(0.16, 1, 0.3, 1) 2.2s forwards;
   }
   @keyframes showCheck {
     0% { opacity: 0; transform: scale(0.5); }
@@ -80,7 +134,7 @@
   }
 
   .clip {
-    animation: sceneOut 0.2s cubic-bezier(0.16, 1, 0.3, 1) 1.8s forwards;
+    animation: sceneOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) 3.7s forwards;
   }
   @keyframes sceneOut {
     to { opacity: 0; transform: scale(0.98); }
